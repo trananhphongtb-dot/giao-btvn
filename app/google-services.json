@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "577528560270",
+    "firebase_url": "https://giao-btvn-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "giao-btvn",
+    "storage_bucket": "giao-btvn.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:577528560270:android:e002b66b485c052700e7df",
+        "android_client_info": {
+          "package_name": "vn.giaobtvn.tieuhoc"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "577528560270-orfohs4du6mbrnrol6clva1jl8hmbtsn.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDz6lkW_qigVBsjnoE1aPRG5K8dH9vNQAA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "577528560270-orfohs4du6mbrnrol6clva1jl8hmbtsn.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

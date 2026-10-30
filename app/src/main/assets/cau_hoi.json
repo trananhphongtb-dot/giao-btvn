@@ -1,0 +1,1152 @@
+{
+  "cau_hoi": [
+    {
+      "id": "TOAN-B1-01",
+      "chu_de": "Toán",
+      "bai": "Bài 1: Cộng, trừ trong phạm vi 20",
+      "noi_dung": "7 + 8 bằng bao nhiêu?",
+      "cac_dap_an": [
+        "14",
+        "15",
+        "16",
+        "13"
+      ],
+      "dap_an_dung": 1,
+      "do_kho": 1
+    },
+    {
+      "id": "TOAN-B1-02",
+      "chu_de": "Toán",
+      "bai": "Bài 1: Cộng, trừ trong phạm vi 20",
+      "noi_dung": "15 - 6 bằng bao nhiêu?",
+      "cac_dap_an": [
+        "8",
+        "9",
+        "10",
+        "7"
+      ],
+      "dap_an_dung": 1,
+      "do_kho": 1
+    },
+    {
+      "id": "TOAN-B1-03",
+      "chu_de": "Toán",
+      "bai": "Bài 1: Cộng, trừ trong phạm vi 20",
+      "noi_dung": "9 + 6 bằng bao nhiêu?",
+      "cac_dap_an": [
+        "14",
+        "16",
+        "15",
+        "17"
+      ],
+      "dap_an_dung": 2,
+      "do_kho": 1
+    },
+    {
+      "id": "TOAN-B1-04",
+      "chu_de": "Toán",
+      "bai": "Bài 1: Cộng, trừ trong phạm vi 20",
+      "noi_dung": "13 - 5 bằng bao nhiêu?",
+      "cac_dap_an": [
+        "9",
+        "7",
+        "8",
+        "6"
+      ],
+      "dap_an_dung": 2,
+      "do_kho": 1
+    },
+    {
+      "id": "TOAN-B1-05",
+      "chu_de": "Toán",
+      "bai": "Bài 1: Cộng, trừ trong phạm vi 20",
+      "noi_dung": "11 + 4 bằng bao nhiêu?",
+      "cac_dap_an": [
+        "14",
+        "15",
+        "16",
+        "13"
+      ],
+      "dap_an_dung": 1,
+      "do_kho": 1
+    },
+    {
+      "id": "TOAN-B1-06",
+      "chu_de": "Toán",
+      "bai": "Bài 1: Cộng, trừ trong phạm vi 20",
+      "noi_dung": "18 - 9 bằng bao nhiêu?",
+      "cac_dap_an": [
+        "8",
+        "10",
+        "9",
+        "7"
+      ],
+      "dap_an_dung": 2,
+      "do_kho": 1
+    },
+    {
+      "id": "TOAN-B1-07",
+      "chu_de": "Toán",
+      "bai": "Bài 1: Cộng, trừ trong phạm vi 20",
+      "noi_dung": "Lan có 6 viên bi, mẹ cho thêm 7 viên. Lan có tất cả bao nhiêu viên bi?",
+      "cac_dap_an": [
+        "12 viên",
+        "13 viên",
+        "14 viên",
+        "11 viên"
+      ],
+      "dap_an_dung": 1,
+      "do_kho": 2
+    },
+    {
+      "id": "TOAN-B1-08",
+      "chu_de": "Toán",
+      "bai": "Bài 1: Cộng, trừ trong phạm vi 20",
+      "noi_dung": "Minh có 17 quả cam, Minh ăn hết 8 quả. Minh còn lại bao nhiêu quả cam?",
+      "cac_dap_an": [
+        "8 quả",
+        "9 quả",
+        "10 quả",
+        "7 quả"
+      ],
+      "dap_an_dung": 1,
+      "do_kho": 2
+    },
+    {
+      "id": "TOAN-B2-01",
+      "chu_de": "Toán",
+      "bai": "Bài 2: Nhân, chia đơn giản",
+      "noi_dung": "3 x 4 bằng bao nhiêu?",
+      "cac_dap_an": [
+        "11",
+        "12",
+        "13",
+        "10"
+      ],
+      "dap_an_dung": 1,
+      "do_kho": 1
+    },
+    {
+      "id": "TOAN-B2-02",
+      "chu_de": "Toán",
+      "bai": "Bài 2: Nhân, chia đơn giản",
+      "noi_dung": "5 x 6 bằng bao nhiêu?",
+      "cac_dap_an": [
+        "25",
+        "30",
+        "35",
+        "20"
+      ],
+      "dap_an_dung": 1,
+      "do_kho": 1
+    },
+    {
+      "id": "TOAN-B2-03",
+      "chu_de": "Toán",
+      "bai": "Bài 2: Nhân, chia đơn giản",
+      "noi_dung": "24 : 4 bằng bao nhiêu?",
+      "cac_dap_an": [
+        "5",
+        "6",
+        "7",
+        "8"
+      ],
+      "dap_an_dung": 1,
+      "do_kho": 1
+    },
+    {
+      "id": "TOAN-B2-04",
+      "chu_de": "Toán",
+      "bai": "Bài 2: Nhân, chia đơn giản",
+      "noi_dung": "35 : 5 bằng bao nhiêu?",
+      "cac_dap_an": [
+        "6",
+        "8",
+        "7",
+        "9"
+      ],
+      "dap_an_dung": 2,
+      "do_kho": 1
+    },
+    {
+      "id": "TOAN-B2-05",
+      "chu_de": "Toán",
+      "bai": "Bài 2: Nhân, chia đơn giản",
+      "noi_dung": "7 x 3 bằng bao nhiêu?",
+      "cac_dap_an": [
+        "20",
+        "21",
+        "22",
+        "24"
+      ],
+      "dap_an_dung": 1,
+      "do_kho": 1
+    },
+    {
+      "id": "TOAN-B2-06",
+      "chu_de": "Toán",
+      "bai": "Bài 2: Nhân, chia đơn giản",
+      "noi_dung": "42 : 6 bằng bao nhiêu?",
+      "cac_dap_an": [
+        "6",
+        "7",
+        "8",
+        "5"
+      ],
+      "dap_an_dung": 1,
+      "do_kho": 2
+    },
+    {
+      "id": "TOAN-B2-07",
+      "chu_de": "Toán",
+      "bai": "Bài 2: Nhân, chia đơn giản",
+      "noi_dung": "Mỗi hộp có 8 chiếc bút. 5 hộp như thế có bao nhiêu chiếc bút?",
+      "cac_dap_an": [
+        "35 chiếc",
+        "40 chiếc",
+        "45 chiếc",
+        "30 chiếc"
+      ],
+      "dap_an_dung": 1,
+      "do_kho": 2
+    },
+    {
+      "id": "TOAN-B2-08",
+      "chu_de": "Toán",
+      "bai": "Bài 2: Nhân, chia đơn giản",
+      "noi_dung": "Có 18 cái bánh chia đều cho 3 bạn. Mỗi bạn được bao nhiêu cái bánh?",
+      "cac_dap_an": [
+        "5 cái",
+        "6 cái",
+        "7 cái",
+        "9 cái"
+      ],
+      "dap_an_dung": 1,
+      "do_kho": 2
+    },
+    {
+      "id": "TOAN-B3-01",
+      "chu_de": "Toán",
+      "bai": "Bài 3: Hình học và đo lường",
+      "noi_dung": "Hình vuông có mấy cạnh?",
+      "cac_dap_an": [
+        "3 cạnh",
+        "4 cạnh",
+        "5 cạnh",
+        "6 cạnh"
+      ],
+      "dap_an_dung": 1,
+      "do_kho": 1
+    },
+    {
+      "id": "TOAN-B3-02",
+      "chu_de": "Toán",
+      "bai": "Bài 3: Hình học và đo lường",
+      "noi_dung": "Hình tam giác có mấy cạnh?",
+      "cac_dap_an": [
+        "2 cạnh",
+        "4 cạnh",
+        "3 cạnh",
+        "5 cạnh"
+      ],
+      "dap_an_dung": 2,
+      "do_kho": 1
+    },
+    {
+      "id": "TOAN-B3-03",
+      "chu_de": "Toán",
+      "bai": "Bài 3: Hình học và đo lường",
+      "noi_dung": "1 mét bằng bao nhiêu xăng-ti-mét?",
+      "cac_dap_an": [
+        "10 cm",
+        "100 cm",
+        "1000 cm",
+        "1 cm"
+      ],
+      "dap_an_dung": 1,
+      "do_kho": 1
+    },
+    {
+      "id": "TOAN-B3-04",
+      "chu_de": "Toán",
+      "bai": "Bài 3: Hình học và đo lường",
+      "noi_dung": "1 ki-lô-gam bằng bao nhiêu gam?",
+      "cac_dap_an": [
+        "100 g",
+        "10 g",
+        "1000 g",
+        "1 g"
+      ],
+      "dap_an_dung": 2,
+      "do_kho": 1
+    },
+    {
+      "id": "TOAN-B3-05",
+      "chu_de": "Toán",
+      "bai": "Bài 3: Hình học và đo lường",
+      "noi_dung": "Hình chữ nhật có 2 cạnh dài và 2 cạnh ngắn. Hai cạnh dài có đặc điểm gì?",
+      "cac_dap_an": [
+        "Dài bằng nhau",
+        "Dài khác nhau",
+        "Ngắn hơn cạnh ngắn",
+        "Không so sánh được"
+      ],
+      "dap_an_dung": 0,
+      "do_kho": 2
+    },
+    {
+      "id": "TOAN-B3-06",
+      "chu_de": "Toán",
+      "bai": "Bài 3: Hình học và đo lường",
+      "noi_dung": "Đồng hồ chỉ 7 giờ đúng. Kim ngắn chỉ số mấy?",
+      "cac_dap_an": [
+        "Số 12",
+        "Số 6",
+        "Số 7",
+        "Số 3"
+      ],
+      "dap_an_dung": 2,
+      "do_kho": 1
+    },
+    {
+      "id": "TOAN-B3-07",
+      "chu_de": "Toán",
+      "bai": "Bài 3: Hình học và đo lường",
+      "noi_dung": "Một tuần lễ có mấy ngày?",
+      "cac_dap_an": [
+        "5 ngày",
+        "6 ngày",
+        "7 ngày",
+        "8 ngày"
+      ],
+      "dap_an_dung": 2,
+      "do_kho": 1
+    },
+    {
+      "id": "TOAN-B3-08",
+      "chu_de": "Toán",
+      "bai": "Bài 3: Hình học và đo lường",
+      "noi_dung": "Hình tròn có đặc điểm nào sau đây?",
+      "cac_dap_an": [
+        "Có 4 góc",
+        "Không có góc, đường viền cong tròn",
+        "Có 3 cạnh",
+        "Có 4 cạnh bằng nhau"
+      ],
+      "dap_an_dung": 1,
+      "do_kho": 3
+    },
+    {
+      "id": "TV-B1-01",
+      "chu_de": "Tiếng Việt",
+      "bai": "Bài 1: Từ và câu",
+      "noi_dung": "Từ nào sau đây chỉ sự vật?",
+      "cac_dap_an": [
+        "Chạy",
+        "Bàn học",
+        "Vui vẻ",
+        "Nhanh"
+      ],
+      "dap_an_dung": 1,
+      "do_kho": 1
+    },
+    {
+      "id": "TV-B1-02",
+      "chu_de": "Tiếng Việt",
+      "bai": "Bài 1: Từ và câu",
+      "noi_dung": "Từ nào sau đây chỉ hoạt động?",
+      "cac_dap_an": [
+        "Con mèo",
+        "Nhảy dây",
+        "Xinh đẹp",
+        "Quyển vở"
+      ],
+      "dap_an_dung": 1,
+      "do_kho": 1
+    },
+    {
+      "id": "TV-B1-03",
+      "chu_de": "Tiếng Việt",
+      "bai": "Bài 1: Từ và câu",
+      "noi_dung": "Từ nào sau đây chỉ đặc điểm?",
+      "cac_dap_an": [
+        "Đỏ thắm",
+        "Ăn cơm",
+        "Cái bàn",
+        "Đi học"
+      ],
+      "dap_an_dung": 0,
+      "do_kho": 1
+    },
+    {
+      "id": "TV-B1-04",
+      "chu_de": "Tiếng Việt",
+      "bai": "Bài 1: Từ và câu",
+      "noi_dung": "Câu nào sau đây là câu hỏi?",
+      "cac_dap_an": [
+        "Hôm nay trời đẹp.",
+        "Bạn tên là gì?",
+        "Em đi học.",
+        "Hoa nở rất đẹp."
+      ],
+      "dap_an_dung": 1,
+      "do_kho": 1
+    },
+    {
+      "id": "TV-B1-05",
+      "chu_de": "Tiếng Việt",
+      "bai": "Bài 1: Từ và câu",
+      "noi_dung": "Câu kể thường kết thúc bằng dấu gì?",
+      "cac_dap_an": [
+        "Dấu chấm hỏi",
+        "Dấu chấm than",
+        "Dấu chấm",
+        "Dấu phẩy"
+      ],
+      "dap_an_dung": 2,
+      "do_kho": 1
+    },
+    {
+      "id": "TV-B1-06",
+      "chu_de": "Tiếng Việt",
+      "bai": "Bài 1: Từ và câu",
+      "noi_dung": "Trong câu 'Chim hót líu lo', từ 'hót' chỉ gì?",
+      "cac_dap_an": [
+        "Sự vật",
+        "Hoạt động",
+        "Đặc điểm",
+        "Màu sắc"
+      ],
+      "dap_an_dung": 1,
+      "do_kho": 2
+    },
+    {
+      "id": "TV-B1-07",
+      "chu_de": "Tiếng Việt",
+      "bai": "Bài 1: Từ và câu",
+      "noi_dung": "Từ nào viết đúng chính tả?",
+      "cac_dap_an": [
+        "Quả cam",
+        "Qủa cam",
+        "Quả k cam",
+        "Quả camm"
+      ],
+      "dap_an_dung": 0,
+      "do_kho": 2
+    },
+    {
+      "id": "TV-B2-01",
+      "chu_de": "Tiếng Việt",
+      "bai": "Bài 2: Chính tả và dấu câu",
+      "noi_dung": "Cuối câu cảm thán thường dùng dấu gì?",
+      "cac_dap_an": [
+        "Dấu chấm",
+        "Dấu chấm than",
+        "Dấu phẩy",
+        "Dấu chấm hỏi"
+      ],
+      "dap_an_dung": 1,
+      "do_kho": 1
+    },
+    {
+      "id": "TV-B2-02",
+      "chu_de": "Tiếng Việt",
+      "bai": "Bài 2: Chính tả và dấu câu",
+      "noi_dung": "Trong các từ sau, từ nào viết đúng chính tả?",
+      "cac_dap_an": [
+        "Bàn ghế",
+        "Bàng ghế",
+        "Bàn ghé",
+        "Bàn gế"
+      ],
+      "dap_an_dung": 0,
+      "do_kho": 1
+    },
+    {
+      "id": "TV-B2-03",
+      "chu_de": "Tiếng Việt",
+      "bai": "Bài 2: Chính tả và dấu câu",
+      "noi_dung": "Từ nào viết sai chính tả?",
+      "cac_dap_an": [
+        "Sách vở",
+        "Sương mù",
+        "Xinh đẹp",
+        "Rong trơi"
+      ],
+      "dap_an_dung": 3,
+      "do_kho": 2
+    },
+    {
+      "id": "TV-B2-04",
+      "chu_de": "Tiếng Việt",
+      "bai": "Bài 2: Chính tả và dấu câu",
+      "noi_dung": "Dấu phẩy dùng để làm gì trong câu?",
+      "cac_dap_an": [
+        "Kết thúc câu",
+        "Ngăn cách các bộ phận trong câu",
+        "Hỏi một điều",
+        "Bày tỏ cảm xúc"
+      ],
+      "dap_an_dung": 1,
+      "do_kho": 2
+    },
+    {
+      "id": "TV-B2-05",
+      "chu_de": "Tiếng Việt",
+      "bai": "Bài 2: Chính tả và dấu câu",
+      "noi_dung": "Chữ cái đầu câu phải viết như thế nào?",
+      "cac_dap_an": [
+        "Viết thường",
+        "Viết hoa",
+        "Viết nghiêng",
+        "Viết nhỏ"
+      ],
+      "dap_an_dung": 1,
+      "do_kho": 1
+    },
+    {
+      "id": "TV-B2-06",
+      "chu_de": "Tiếng Việt",
+      "bai": "Bài 2: Chính tả và dấu câu",
+      "noi_dung": "Tên riêng của người phải viết như thế nào?",
+      "cac_dap_an": [
+        "Viết thường tất cả",
+        "Viết hoa chữ cái đầu",
+        "Viết hoa tất cả",
+        "Không cần viết hoa"
+      ],
+      "dap_an_dung": 1,
+      "do_kho": 1
+    },
+    {
+      "id": "TV-B2-07",
+      "chu_de": "Tiếng Việt",
+      "bai": "Bài 2: Chính tả và dấu câu",
+      "noi_dung": "Câu 'Ôi, hoa đẹp quá!' bày tỏ điều gì?",
+      "cac_dap_an": [
+        "Hỏi han",
+        "Kể chuyện",
+        "Cảm xúc ngạc nhiên, khen ngợi",
+        "Ra lệnh"
+      ],
+      "dap_an_dung": 2,
+      "do_kho": 2
+    },
+    {
+      "id": "TV-B3-01",
+      "chu_de": "Tiếng Việt",
+      "bai": "Bài 3: Đọc hiểu ngắn",
+      "noi_dung": "Đọc đoạn văn: 'Mùa xuân, hoa đào nở hồng khắp sân. Chim én bay về, trời ấm dần lên.' Mùa nào được nhắc đến?",
+      "cac_dap_an": [
+        "Mùa hè",
+        "Mùa thu",
+        "Mùa xuân",
+        "Mùa đông"
+      ],
+      "dap_an_dung": 2,
+      "do_kho": 1
+    },
+    {
+      "id": "TV-B3-02",
+      "chu_de": "Tiếng Việt",
+      "bai": "Bài 3: Đọc hiểu ngắn",
+      "noi_dung": "Đọc đoạn văn: 'Mùa xuân, hoa đào nở hồng khắp sân. Chim én bay về, trời ấm dần lên.' Loài hoa nào nở trong đoạn văn?",
+      "cac_dap_an": [
+        "Hoa mai",
+        "Hoa đào",
+        "Hoa sen",
+        "Hoa cúc"
+      ],
+      "dap_an_dung": 1,
+      "do_kho": 1
+    },
+    {
+      "id": "TV-B3-03",
+      "chu_de": "Tiếng Việt",
+      "bai": "Bài 3: Đọc hiểu ngắn",
+      "noi_dung": "Đọc đoạn văn: 'Lan dậy sớm, đánh răng, rửa mặt rồi ăn sáng và đến trường đúng giờ.' Lan làm gì sau khi ăn sáng?",
+      "cac_dap_an": [
+        "Đi chơi",
+        "Đến trường",
+        "Ngủ tiếp",
+        "Xem ti vi"
+      ],
+      "dap_an_dung": 1,
+      "do_kho": 2
+    },
+    {
+      "id": "TV-B3-04",
+      "chu_de": "Tiếng Việt",
+      "bai": "Bài 3: Đọc hiểu ngắn",
+      "noi_dung": "Đọc đoạn văn: 'Lan dậy sớm, đánh răng, rửa mặt rồi ăn sáng và đến trường đúng giờ.' Lan là người như thế nào?",
+      "cac_dap_an": [
+        "Lười biếng",
+        "Chăm chỉ, đúng giờ",
+        "Hay đi muộn",
+        "Không thích học"
+      ],
+      "dap_an_dung": 1,
+      "do_kho": 2
+    },
+    {
+      "id": "TV-B3-05",
+      "chu_de": "Tiếng Việt",
+      "bai": "Bài 3: Đọc hiểu ngắn",
+      "noi_dung": "Đọc đoạn văn: 'Cây bàng trước sân trường tỏa bóng mát. Giờ ra chơi, chúng em chơi đùa dưới gốc bàng.' Cây gì ở trước sân trường?",
+      "cac_dap_an": [
+        "Cây phượng",
+        "Cây bàng",
+        "Cây đa",
+        "Cây dừa"
+      ],
+      "dap_an_dung": 1,
+      "do_kho": 1
+    },
+    {
+      "id": "TV-B3-06",
+      "chu_de": "Tiếng Việt",
+      "bai": "Bài 3: Đọc hiểu ngắn",
+      "noi_dung": "Đọc đoạn văn: 'Cây bàng trước sân trường tỏa bóng mát. Giờ ra chơi, chúng em chơi đùa dưới gốc bàng.' Học sinh chơi đùa ở đâu?",
+      "cac_dap_an": [
+        "Trong lớp",
+        "Dưới gốc bàng",
+        "Trên sân bóng",
+        "Ở nhà"
+      ],
+      "dap_an_dung": 1,
+      "do_kho": 2
+    },
+    {
+      "id": "KH-B1-01",
+      "chu_de": "Khoa học",
+      "bai": "Bài 1: Cơ thể người và sức khỏe",
+      "noi_dung": "Cơ quan nào giúp chúng ta nhìn thấy mọi vật?",
+      "cac_dap_an": [
+        "Tai",
+        "Mắt",
+        "Mũi",
+        "Lưỡi"
+      ],
+      "dap_an_dung": 1,
+      "do_kho": 1
+    },
+    {
+      "id": "KH-B1-02",
+      "chu_de": "Khoa học",
+      "bai": "Bài 1: Cơ thể người và sức khỏe",
+      "noi_dung": "Để có sức khỏe tốt, mỗi ngày chúng ta nên làm gì?",
+      "cac_dap_an": [
+        "Thức khuya",
+        "Tập thể dục và ăn uống đủ chất",
+        "Ăn nhiều kẹo",
+        "Ngồi xem ti vi cả ngày"
+      ],
+      "dap_an_dung": 1,
+      "do_kho": 1
+    },
+    {
+      "id": "KH-B1-03",
+      "chu_de": "Khoa học",
+      "bai": "Bài 1: Cơ thể người và sức khỏe",
+      "noi_dung": "Trước khi ăn, chúng ta cần làm gì?",
+      "cac_dap_an": [
+        "Rửa tay sạch",
+        "Chạy nhảy",
+        "Đi ngủ",
+        "Uống nước ngọt"
+      ],
+      "dap_an_dung": 0,
+      "do_kho": 1
+    },
+    {
+      "id": "KH-B1-04",
+      "chu_de": "Khoa học",
+      "bai": "Bài 1: Cơ thể người và sức khỏe",
+      "noi_dung": "Cơ quan nào giúp chúng ta nghe được âm thanh?",
+      "cac_dap_an": [
+        "Mắt",
+        "Tai",
+        "Tay",
+        "Chân"
+      ],
+      "dap_an_dung": 1,
+      "do_kho": 1
+    },
+    {
+      "id": "KH-B1-05",
+      "chu_de": "Khoa học",
+      "bai": "Bài 1: Cơ thể người và sức khỏe",
+      "noi_dung": "Khi bị ốm, chúng ta nên làm gì?",
+      "cac_dap_an": [
+        "Tự mua thuốc uống",
+        "Nghỉ ngơi và nghe lời thầy thuốc",
+        "Chơi ngoài nắng",
+        "Ăn kem lạnh"
+      ],
+      "dap_an_dung": 1,
+      "do_kho": 2
+    },
+    {
+      "id": "KH-B1-06",
+      "chu_de": "Khoa học",
+      "bai": "Bài 1: Cơ thể người và sức khỏe",
+      "noi_dung": "Đánh răng mỗi ngày giúp ích gì?",
+      "cac_dap_an": [
+        "Răng chắc khỏe, miệng thơm tho",
+        "Răng mọc nhanh hơn",
+        "Không cần ăn cơm",
+        "Mắt sáng hơn"
+      ],
+      "dap_an_dung": 0,
+      "do_kho": 1
+    },
+    {
+      "id": "KH-B1-07",
+      "chu_de": "Khoa học",
+      "bai": "Bài 1: Cơ thể người và sức khỏe",
+      "noi_dung": "Bộ phận nào giúp cơ thể đứng thẳng và vận động?",
+      "cac_dap_an": [
+        "Xương và cơ",
+        "Tóc",
+        "Móng tay",
+        "Da"
+      ],
+      "dap_an_dung": 0,
+      "do_kho": 2
+    },
+    {
+      "id": "KH-B2-01",
+      "chu_de": "Khoa học",
+      "bai": "Bài 2: Thực vật và động vật",
+      "noi_dung": "Cây xanh cần gì để sống?",
+      "cac_dap_an": [
+        "Nước, ánh sáng, không khí",
+        "Chỉ cần đất",
+        "Chỉ cần nước",
+        "Chỉ cần ánh sáng"
+      ],
+      "dap_an_dung": 0,
+      "do_kho": 1
+    },
+    {
+      "id": "KH-B2-02",
+      "chu_de": "Khoa học",
+      "bai": "Bài 2: Thực vật và động vật",
+      "noi_dung": "Bộ phận nào của cây hút nước và chất dinh dưỡng từ đất?",
+      "cac_dap_an": [
+        "Lá",
+        "Hoa",
+        "Rễ",
+        "Quả"
+      ],
+      "dap_an_dung": 2,
+      "do_kho": 1
+    },
+    {
+      "id": "KH-B2-03",
+      "chu_de": "Khoa học",
+      "bai": "Bài 2: Thực vật và động vật",
+      "noi_dung": "Con gà con nở ra từ đâu?",
+      "cac_dap_an": [
+        "Từ hạt",
+        "Từ trứng",
+        "Từ cây",
+        "Từ đất"
+      ],
+      "dap_an_dung": 1,
+      "do_kho": 1
+    },
+    {
+      "id": "KH-B2-04",
+      "chu_de": "Khoa học",
+      "bai": "Bài 2: Thực vật và động vật",
+      "noi_dung": "Loài vật nào sau đây sống dưới nước?",
+      "cac_dap_an": [
+        "Con mèo",
+        "Con cá",
+        "Con chó",
+        "Con gà"
+      ],
+      "dap_an_dung": 1,
+      "do_kho": 1
+    },
+    {
+      "id": "KH-B2-05",
+      "chu_de": "Khoa học",
+      "bai": "Bài 2: Thực vật và động vật",
+      "noi_dung": "Cây lúa cho chúng ta sản phẩm gì?",
+      "cac_dap_an": [
+        "Quả cam",
+        "Hạt gạo",
+        "Củ khoai",
+        "Hoa hồng"
+      ],
+      "dap_an_dung": 1,
+      "do_kho": 1
+    },
+    {
+      "id": "KH-B2-06",
+      "chu_de": "Khoa học",
+      "bai": "Bài 2: Thực vật và động vật",
+      "noi_dung": "Vì sao không nên bẻ cành, ngắt hoa bừa bãi?",
+      "cac_dap_an": [
+        "Vì hoa xấu",
+        "Vì làm hại cây và mất vẻ đẹp chung",
+        "Vì cây không cần hoa",
+        "Vì hoa sẽ mọc lại ngay"
+      ],
+      "dap_an_dung": 1,
+      "do_kho": 2
+    },
+    {
+      "id": "KH-B2-07",
+      "chu_de": "Khoa học",
+      "bai": "Bài 2: Thực vật và động vật",
+      "noi_dung": "Chim có đặc điểm nào sau đây?",
+      "cac_dap_an": [
+        "Có vây, sống dưới nước",
+        "Có cánh, có lông vũ, biết bay",
+        "Có 4 chân, biết chạy nhanh",
+        "Sống trong đất"
+      ],
+      "dap_an_dung": 1,
+      "do_kho": 2
+    },
+    {
+      "id": "KH-B3-01",
+      "chu_de": "Khoa học",
+      "bai": "Bài 3: Môi trường xung quanh",
+      "noi_dung": "Để giữ trường lớp sạch đẹp, chúng ta nên làm gì?",
+      "cac_dap_an": [
+        "Vứt rác đúng nơi quy định",
+        "Vứt rác ra sân",
+        "Vẽ bậy lên tường",
+        "Ngắt lá cây"
+      ],
+      "dap_an_dung": 0,
+      "do_kho": 1
+    },
+    {
+      "id": "KH-B3-02",
+      "chu_de": "Khoa học",
+      "bai": "Bài 3: Môi trường xung quanh",
+      "noi_dung": "Nước sạch dùng để làm gì?",
+      "cac_dap_an": [
+        "Uống, nấu ăn, tắm rửa",
+        "Tưới cây khô",
+        "Rửa xe bẩn",
+        "Đổ đi"
+      ],
+      "dap_an_dung": 0,
+      "do_kho": 1
+    },
+    {
+      "id": "KH-B3-03",
+      "chu_de": "Khoa học",
+      "bai": "Bài 3: Môi trường xung quanh",
+      "noi_dung": "Khi trời nắng gắt, chúng ta nên làm gì để bảo vệ sức khỏe?",
+      "cac_dap_an": [
+        "Đội mũ, uống đủ nước",
+        "Chạy nhảy ngoài nắng",
+        "Không đội mũ",
+        "Nhịn uống nước"
+      ],
+      "dap_an_dung": 0,
+      "do_kho": 2
+    },
+    {
+      "id": "KH-B3-04",
+      "chu_de": "Khoa học",
+      "bai": "Bài 3: Môi trường xung quanh",
+      "noi_dung": "Tiết kiệm điện là hành động nào sau đây?",
+      "cac_dap_an": [
+        "Tắt đèn khi ra khỏi phòng",
+        "Bật tất cả đèn cả ngày",
+        "Bật quạt khi không có ai",
+        "Mở ti vi suốt đêm"
+      ],
+      "dap_an_dung": 0,
+      "do_kho": 1
+    },
+    {
+      "id": "KH-B3-05",
+      "chu_de": "Khoa học",
+      "bai": "Bài 3: Môi trường xung quanh",
+      "noi_dung": "Rác thải nhựa vứt bừa bãi gây hại gì?",
+      "cac_dap_an": [
+        "Làm đẹp đường phố",
+        "Gây ô nhiễm môi trường",
+        "Giúp cây mọc tốt",
+        "Không gây hại gì"
+      ],
+      "dap_an_dung": 1,
+      "do_kho": 2
+    },
+    {
+      "id": "KH-B3-06",
+      "chu_de": "Khoa học",
+      "bai": "Bài 3: Môi trường xung quanh",
+      "noi_dung": "Vào mùa mưa bão, chúng ta cần chú ý điều gì?",
+      "cac_dap_an": [
+        "Ra ngoài chơi khi bão to",
+        "Ở trong nhà an toàn, nghe theo hướng dẫn của người lớn",
+        "Trèo cây cao",
+        "Lội nước sâu"
+      ],
+      "dap_an_dung": 1,
+      "do_kho": 3
+    },
+    {
+      "bai": "Bài 1: Cộng, trừ trong phạm vi 20",
+      "cac_dap_an": [
+        "15",
+        "16",
+        "17",
+        "18"
+      ],
+      "chu_de": "Toán",
+      "dap_an_dung": 2,
+      "do_kho": 3,
+      "id": "TOAN-B1-09",
+      "noi_dung": "An có 14 viên bi, An cho bạn 5 viên rồi mẹ cho thêm 8 viên. An còn lại bao nhiêu viên bi?"
+    },
+    {
+      "bai": "Bài 1: Cộng, trừ trong phạm vi 20",
+      "cac_dap_an": [
+        "11",
+        "12",
+        "13",
+        "10"
+      ],
+      "chu_de": "Toán",
+      "dap_an_dung": 1,
+      "do_kho": 3,
+      "id": "TOAN-B1-10",
+      "noi_dung": "Mai có một số quyển vở, Mai mua thêm 8 quyển nữa thì được 20 quyển. Lúc đầu Mai có bao nhiêu quyển vở?"
+    },
+    {
+      "bai": "Bài 2: Nhân, chia đơn giản",
+      "cac_dap_an": [
+        "14",
+        "15",
+        "16",
+        "13"
+      ],
+      "chu_de": "Toán",
+      "dap_an_dung": 1,
+      "do_kho": 3,
+      "id": "TOAN-B2-09",
+      "noi_dung": "Một cửa hàng có 4 kệ, mỗi kệ 6 hộp bánh, đã bán 9 hộp. Cửa hàng còn lại bao nhiêu hộp bánh?"
+    },
+    {
+      "bai": "Bài 2: Nhân, chia đơn giản",
+      "cac_dap_an": [
+        "12",
+        "14",
+        "13",
+        "11"
+      ],
+      "chu_de": "Toán",
+      "dap_an_dung": 2,
+      "do_kho": 3,
+      "id": "TOAN-B2-10",
+      "noi_dung": "Một số nhân với 4 bằng 32, rồi cộng thêm 5. Kết quả cuối cùng là bao nhiêu?"
+    },
+    {
+      "bai": "Bài 3: Hình học và đo lường",
+      "cac_dap_an": [
+        "17 cm",
+        "34 cm",
+        "60 cm",
+        "29 cm"
+      ],
+      "chu_de": "Toán",
+      "dap_an_dung": 1,
+      "do_kho": 3,
+      "id": "TOAN-B3-09",
+      "noi_dung": "Hình chữ nhật có chiều dài 12 cm, chiều rộng 5 cm. Chu vi của hình chữ nhật là bao nhiêu?"
+    },
+    {
+      "bai": "Bài 3: Hình học và đo lường",
+      "cac_dap_an": [
+        "2000 gam",
+        "1500 gam",
+        "3000 gam",
+        "2500 gam"
+      ],
+      "chu_de": "Toán",
+      "dap_an_dung": 3,
+      "do_kho": 3,
+      "id": "TOAN-B3-10",
+      "noi_dung": "Mẹ mua 2 ki-lô-gam gạo và 500 gam đường. Tổng khối lượng mẹ mua là bao nhiêu gam?"
+    },
+    {
+      "bai": "Bài 1: Từ và câu",
+      "cac_dap_an": [
+        "Bé Lan",
+        "học bài",
+        "chăm chỉ",
+        "mỗi tối"
+      ],
+      "chu_de": "Tiếng Việt",
+      "dap_an_dung": 2,
+      "do_kho": 3,
+      "id": "TV-B1-08",
+      "noi_dung": "Trong câu 'Bé Lan chăm chỉ học bài mỗi tối', từ nào chỉ đặc điểm?"
+    },
+    {
+      "bai": "Bài 1: Từ và câu",
+      "cac_dap_an": [
+        "Bạn hãy mở cửa sổ giúp mình.",
+        "Hôm nay trời mưa.",
+        "Bạn tên là gì?",
+        "Hoa hồng thật đẹp!"
+      ],
+      "chu_de": "Tiếng Việt",
+      "dap_an_dung": 0,
+      "do_kho": 3,
+      "id": "TV-B1-09",
+      "noi_dung": "Câu nào sau đây là câu khiến (câu cầu khiến)?"
+    },
+    {
+      "bai": "Bài 2: Chính tả và dấu câu",
+      "cac_dap_an": [
+        "Lan, Hoa và Minh cùng đi học.",
+        "Lan Hoa và Minh cùng đi học",
+        "Lan, Hoa, và Minh cùng đi học.",
+        "lan, Hoa và Minh cùng đi học."
+      ],
+      "chu_de": "Tiếng Việt",
+      "dap_an_dung": 0,
+      "do_kho": 3,
+      "id": "TV-B2-08",
+      "noi_dung": "Câu nào sau đây viết đúng dấu câu và viết hoa?"
+    },
+    {
+      "bai": "Bài 2: Chính tả và dấu câu",
+      "cac_dap_an": [
+        "Sách giáo khoa",
+        "Xinh xắn",
+        "Sương sớm",
+        "Xáng sớm"
+      ],
+      "chu_de": "Tiếng Việt",
+      "dap_an_dung": 3,
+      "do_kho": 3,
+      "id": "TV-B2-09",
+      "noi_dung": "Từ nào sau đây viết sai chính tả do nhầm lẫn s và x?"
+    },
+    {
+      "bai": "Bài 3: Đọc hiểu ngắn",
+      "cac_dap_an": [
+        "Vì Hùng học giỏi nhất lớp",
+        "Vì Hùng ngoan và tự lập",
+        "Vì Hùng dậy muộn",
+        "Vì Hùng được mẹ làm giúp mọi việc"
+      ],
+      "chu_de": "Tiếng Việt",
+      "dap_an_dung": 1,
+      "do_kho": 3,
+      "id": "TV-B3-07",
+      "noi_dung": "Đọc đoạn văn: 'Sáng nào, Hùng cũng dậy sớm, tự gấp chăn màn rồi phụ mẹ quét sân trước khi đến trường. Cô giáo khen Hùng ngoan và tự lập.' Vì sao cô giáo khen Hùng?"
+    },
+    {
+      "bai": "Bài 3: Đọc hiểu ngắn",
+      "cac_dap_an": [
+        "Nhờ người khác làm",
+        "Chơi một mình",
+        "Tự làm việc của mình",
+        "Không nghe lời"
+      ],
+      "chu_de": "Tiếng Việt",
+      "dap_an_dung": 2,
+      "do_kho": 3,
+      "id": "TV-B3-08",
+      "noi_dung": "Đọc đoạn văn: 'Sáng nào, Hùng cũng dậy sớm, tự gấp chăn màn rồi phụ mẹ quét sân trước khi đến trường. Cô giáo khen Hùng ngoan và tự lập.' Từ 'tự lập' trong đoạn văn có nghĩa gần nhất với gì?"
+    },
+    {
+      "bai": "Bài 1: Cơ thể người và sức khỏe",
+      "cac_dap_an": [
+        "Để da đẹp hơn",
+        "Để cơ thể hoạt động tốt, bù lại lượng nước đã mất",
+        "Để không cần ăn cơm",
+        "Để ngủ ngon hơn"
+      ],
+      "chu_de": "Khoa học",
+      "dap_an_dung": 1,
+      "do_kho": 3,
+      "id": "KH-B1-08",
+      "noi_dung": "Vì sao chúng ta cần uống đủ nước mỗi ngày?"
+    },
+    {
+      "bai": "Bài 1: Cơ thể người và sức khỏe",
+      "cac_dap_an": [
+        "Khỏe mạnh hơn",
+        "Dễ mệt mỏi, sâu răng và tăng cân",
+        "Cao lớn nhanh hơn",
+        "Mắt sáng hơn"
+      ],
+      "chu_de": "Khoa học",
+      "dap_an_dung": 1,
+      "do_kho": 3,
+      "id": "KH-B1-09",
+      "noi_dung": "Bạn Nam thường xuyên thức khuya, ăn nhiều đồ ngọt và ít vận động. Điều nào sau đây có thể xảy ra với sức khỏe của Nam?"
+    },
+    {
+      "bai": "Bài 2: Thực vật và động vật",
+      "cac_dap_an": [
+        "Vì thiếu ánh sáng để quang hợp",
+        "Vì thiếu nước",
+        "Vì đất quá tốt",
+        "Vì có nhiều côn trùng"
+      ],
+      "chu_de": "Khoa học",
+      "dap_an_dung": 0,
+      "do_kho": 3,
+      "id": "KH-B2-08",
+      "noi_dung": "Vì sao cây trồng trong bóng tối lâu ngày thường yếu và vàng lá?"
+    },
+    {
+      "bai": "Bài 2: Thực vật và động vật",
+      "cac_dap_an": [
+        "Cá",
+        "Chim",
+        "Lưỡng cư",
+        "Côn trùng"
+      ],
+      "chu_de": "Khoa học",
+      "dap_an_dung": 2,
+      "do_kho": 3,
+      "id": "KH-B2-09",
+      "noi_dung": "Con ếch sống được cả ở dưới nước và trên cạn, nhưng da của nó phải luôn ẩm. Ếch thuộc nhóm động vật nào?"
+    },
+    {
+      "bai": "Bài 3: Môi trường xung quanh",
+      "cac_dap_an": [
+        "Để nước không bị bẩn",
+        "Để tránh cháy và giữ nguồn nước sạch",
+        "Để cây nhanh lớn",
+        "Để trời mát hơn"
+      ],
+      "chu_de": "Khoa học",
+      "dap_an_dung": 1,
+      "do_kho": 3,
+      "id": "KH-B3-07",
+      "noi_dung": "Vào mùa khô, vì sao chúng ta cần tiết kiệm nước và không đốt rác ngoài trời?"
+    },
+    {
+      "bai": "Bài 3: Môi trường xung quanh",
+      "cac_dap_an": [
+        "Nhà gọn gàng hơn",
+        "Rác dễ tái chế, giảm ô nhiễm môi trường",
+        "Có nhiều rác hơn",
+        "Không cần đổ rác nữa"
+      ],
+      "chu_de": "Khoa học",
+      "dap_an_dung": 1,
+      "do_kho": 3,
+      "id": "KH-B3-08",
+      "noi_dung": "Gia đình bạn phân loại rác: giấy, vỏ chai nhựa và thức ăn thừa để riêng. Việc làm này giúp ích gì nhất?"
+    }
+  ]
+}

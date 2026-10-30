@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <!-- Ảnh chụp bài làm chỉ lưu tạm trong cache, app nén rồi nộp lên
+         Realtime Database dạng Base64, không giữ ảnh gốc trên máy. -->
+    <cache-path name="anh_bai_tam" path="anh_bai/" />
+</paths>

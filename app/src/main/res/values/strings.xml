@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Tên hiển thị TẠM, chưa chốt tên app chính thức. -->
+    <string name="app_name">Giao Bài Tập Về Nhà</string>
+    <string name="chon_giao_vien">Tôi là giáo viên</string>
+    <string name="chon_hoc_sinh">Tôi là học sinh</string>
+    <!-- default_web_client_id KHÔNG khai báo ở đây: chuỗi này do plugin
+         google-services tự sinh từ file google-services.json. -->
+</resources>
