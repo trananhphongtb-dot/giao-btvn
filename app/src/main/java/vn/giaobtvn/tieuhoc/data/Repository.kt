@@ -227,8 +227,9 @@ class FirebaseRepository : GiaoBtvnRepository {
         anToan {
             val snap = submissionsRef.child(baiGiaoId).get().await()
             snap.children.mapNotNull { child ->
+                val key = child.key ?: return@mapNotNull null
                 val nop = docBaiNop(child) ?: return@mapNotNull null
-                child.key to nop
+                key to nop
             }.toMap()
         }
 
