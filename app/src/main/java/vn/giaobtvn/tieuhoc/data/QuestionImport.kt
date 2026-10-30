@@ -8,7 +8,7 @@ import android.net.Uri
 import android.os.ParcelFileDescriptor
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.text.TextRecognition
-import com.google.mlkit.vision.text.TextRecognizerOptions
+import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 import java.io.InputStream
 import java.util.zip.ZipInputStream
 import kotlinx.coroutines.tasks.await
