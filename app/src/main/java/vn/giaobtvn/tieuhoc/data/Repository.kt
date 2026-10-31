@@ -100,7 +100,7 @@ object DangNhapGoogle {
         } catch (e: GetCredentialCancellationException) {
             Result.failure(Exception("Bạn đã hủy đăng nhập"))
         } catch (e: NoCredentialException) {
-            Result.failure(Exception("Máy chưa có tài khoản Google. Hãy thêm tài khoản Google trong Cài đặt của điện thoại."))
+            Result.failure(Exception("Không lấy được tài khoản Google trên máy này. Kiểm tra tài khoản Google trong Cài đặt của điện thoại, hoặc cấu hình Firebase của app, rồi thử lại."))
         } catch (e: Exception) {
             Result.failure(Exception("Đăng nhập không thành công, kiểm tra mạng rồi thử lại"))
         }
