@@ -237,6 +237,7 @@ class MainActivity : ComponentActivity() {
                             when (val route = hocSinhRoute) {
                                 HocSinhRoute.Home -> {
                                     StudentHomeScreen(
+                                        activity = this@MainActivity,
                                         prefs = prefs,
                                         repo = repo,
                                         onXemBai = { hocSinhRoute = HocSinhRoute.DanhSachBai },

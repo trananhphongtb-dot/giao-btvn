@@ -1,6 +1,7 @@
 package vn.giaobtvn.tieuhoc.ui
 
 import android.Manifest
+import android.app.Activity
 import android.content.pm.PackageManager
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -40,6 +41,7 @@ import java.io.File
 import kotlinx.coroutines.launch
 import vn.giaobtvn.tieuhoc.data.BaiGiao
 import vn.giaobtvn.tieuhoc.data.BaiNop
+import vn.giaobtvn.tieuhoc.data.DangNhapGoogle
 import vn.giaobtvn.tieuhoc.data.CauHoi
 import vn.giaobtvn.tieuhoc.data.GiaoBtvnRepository
 import vn.giaobtvn.tieuhoc.data.ImportedQuestion
@@ -64,6 +66,7 @@ import vn.giaobtvn.tieuhoc.data.tronCauHoiVaDapAn
 
 @Composable
 fun StudentHomeScreen(
+    activity: Activity,
     prefs: LocalPrefs,
     repo: GiaoBtvnRepository,
     onXemBai: () -> Unit,
@@ -76,6 +79,11 @@ fun StudentHomeScreen(
     var lop by remember { mutableStateOf<LopHoc?>(null) }
     var loi by remember { mutableStateOf("") }
     var thongBao by remember { mutableStateOf("") }
+    // Đăng nhập Google cho học sinh là TÙY CHỌN, không bắt buộc: chỉ để
+    // tự điền tên khi tham gia lớp. Bài nộp vẫn tính theo mã máy
+    // (hocSinhId) như trước, không thay đổi danh sách lớp.
+    var taiKhoanGoogle by remember { mutableStateOf(DangNhapGoogle.giaoVienHienTai()) }
+    var dangDangNhapGoogle by remember { mutableStateOf(false) }
 
     LaunchedEffect(prefs.maLop) {
         if (prefs.maLop.isNotBlank()) {
@@ -85,6 +93,43 @@ fun StudentHomeScreen(
 
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp)) {
         TieuDeManHinh("Học sinh", "Tham gia lớp để làm bài cô giao, hoặc ôn bài tự do")
+        val taiKhoanHienTai = taiKhoanGoogle
+        if (taiKhoanHienTai == null) {
+            Text(
+                "Có tài khoản Google thì đăng nhập để app tự điền tên cho bạn, không bắt buộc:",
+                fontSize = 15.sp,
+            )
+            Spacer(Modifier.height(8.dp))
+            NutPhu(if (dangDangNhapGoogle) "Đang đăng nhập..." else "Đăng nhập bằng Google") {
+                if (!dangDangNhapGoogle) {
+                    dangDangNhapGoogle = true
+                    loi = ""
+                    scope.launch {
+                        DangNhapGoogle.dangNhap(activity)
+                            .onSuccess { gv ->
+                                taiKhoanGoogle = gv
+                                if (tenNhap.isBlank()) tenNhap = gv.ten
+                                thongBao = "Đã đăng nhập Google: ${gv.ten}"
+                            }
+                            .onFailure { loi = it.message ?: "Đăng nhập không thành công" }
+                        dangDangNhapGoogle = false
+                    }
+                }
+            }
+            Spacer(Modifier.height(8.dp))
+        } else {
+            Text(
+                "Đã đăng nhập Google: ${taiKhoanHienTai.ten}",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+            )
+            Spacer(Modifier.height(8.dp))
+            NutPhu("Đăng xuất Google") {
+                DangNhapGoogle.dangXuat()
+                taiKhoanGoogle = null
+            }
+            Spacer(Modifier.height(8.dp))
+        }
         val lopHienTai = lop
         if (prefs.maLop.isBlank()) {
             Text("Bạn chưa tham gia lớp nào. Nhập mã lớp cô cho để vào lớp:", fontSize = 16.sp)
