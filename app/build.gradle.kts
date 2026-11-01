@@ -21,9 +21,18 @@ android {
 
     // Khóa ký lấy từ biến môi trường khi build (theo mẫu cũ); không có thì
     // dùng khóa debug mặc định. KHÔNG hard-code mật khẩu trong file này.
+    // QUAN TRỌNG: chỉ dùng khóa upload khi đủ cả 3 giá trị mật khẩu +
+    // alias. Trước đây chỉ cài 2/4 secret (thiếu 2 mật khẩu) nên build
+    // cố đọc khóa upload với mật khẩu rỗng và lỗi "keystore password
+    // was incorrect", làm hỏng cả bản build #8. Thiếu mật khẩu thì quay
+    // về ký debug mặc định như bản #6, để build vẫn ra APK cho anh thử.
     val ksFile = System.getenv("KEYSTORE_FILE")?.let { file(it) }?.takeIf { it.exists() }
+    val coDuMatKhauUpload = !System.getenv("KEYSTORE_PASSWORD").isNullOrBlank() &&
+        !System.getenv("KEY_PASSWORD").isNullOrBlank() &&
+        !System.getenv("KEY_ALIAS").isNullOrBlank()
+    val dungUpload = ksFile != null && coDuMatKhauUpload
     signingConfigs {
-        if (ksFile != null) {
+        if (dungUpload) {
             create("upload") {
                 storeFile = ksFile
                 storePassword = System.getenv("KEYSTORE_PASSWORD")
@@ -35,11 +44,11 @@ android {
 
     buildTypes {
         debug {
-            if (ksFile != null) signingConfig = signingConfigs.getByName("upload")
+            if (dungUpload) signingConfig = signingConfigs.getByName("upload")
         }
         release {
             isMinifyEnabled = false
-            if (ksFile != null) signingConfig = signingConfigs.getByName("upload")
+            if (dungUpload) signingConfig = signingConfigs.getByName("upload")
         }
     }
     compileOptions {
