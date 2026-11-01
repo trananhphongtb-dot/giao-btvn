@@ -75,6 +75,107 @@ fun parseNgayGio(ngay: String, gio: String): Long? {
     }
 }
 
+/**
+ * Kiểm tra hạn nộp: phải sau thời điểm giao ít nhất 30 phút. Trả về
+ * thông báo lỗi tiếng Việt, null = hợp lệ. Dùng chung cho bài giấy và
+ * bài trắc nghiệm, để cô không giao bài mà hạn nộp đã qua hoặc quá gấp.
+ */
+fun loiHanNop(hanNop: Long?): String? {
+    if (hanNop == null) return "Chưa chọn ngày giờ hạn nộp. Cô bấm chọn ngày và chọn giờ ở dưới."
+    val toiThieu = System.currentTimeMillis() + 30L * 60L * 1000L
+    if (hanNop < toiThieu) return "Hạn nộp phải sau thời điểm giao ít nhất 30 phút. Cô hãy chọn hạn nộp muộn hơn."
+    return null
+}
+
+private fun dinhDangNgay(millis: Long): String =
+    SimpleDateFormat("dd/MM/yyyy", Locale("vi", "VN")).format(java.util.Date(millis))
+
+private fun dinhDangGio(gio: Int, phut: Int): String =
+    String.format(Locale("vi", "VN"), "%02d:%02d", gio, phut)
+
+/**
+ * Chọn hạn nộp bằng bảng: 1 nút chọn ngày (lịch) + 1 nút chọn giờ
+ * (đồng hồ), thay cho 2 ô gõ tay dd/MM/yyyy và HH:mm trước đây vốn
+ * hay sai định dạng. Giá trị chọn được ghi vào ngay/gio để luồng giao
+ * bài cũ (parseNgayGio) dùng lại không đổi.
+ */
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
+@Composable
+fun ChonHanNop(
+    ngay: String,
+    gio: String,
+    onNgay: (String) -> Unit,
+    onGio: (String) -> Unit,
+) {
+    var hienLich by remember { mutableStateOf(false) }
+    var hienDongHo by remember { mutableStateOf(false) }
+    val homNay = java.util.Calendar.getInstance()
+    val trangThaiNgay = androidx.compose.material3.rememberDatePickerState(
+        initialSelectedDateMillis = homNay.timeInMillis,
+    )
+    val gioMacDinh = (homNay.get(java.util.Calendar.HOUR_OF_DAY) + 1) % 24
+    val trangThaiGio = androidx.compose.material3.rememberTimePickerState(
+        initialHour = gioMacDinh,
+        initialMinute = homNay.get(java.util.Calendar.MINUTE),
+        is24Hour = true,
+    )
+
+    Text("Hạn nộp:", fontWeight = FontWeight.Bold)
+    Spacer(Modifier.height(4.dp))
+    Text(
+        if (ngay.isNotBlank() && gio.isNotBlank()) "Hạn nộp: $ngay lúc $gio" else "Chưa chọn hạn nộp",
+        fontSize = 16.sp,
+    )
+    Spacer(Modifier.height(8.dp))
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        NutNhoQuanLy("Chọn ngày") { hienLich = true }
+        NutNhoQuanLy("Chọn giờ") { hienDongHo = true }
+    }
+    Text(
+        "Hạn nộp phải sau lúc giao ít nhất 30 phút, nếu không app sẽ báo lỗi và không giao bài.",
+        fontSize = 14.sp,
+        color = Color.Gray,
+    )
+
+    if (hienLich) {
+        androidx.compose.material3.DatePickerDialog(
+            onDismissRequest = { hienLich = false },
+            confirmButton = {
+                androidx.compose.material3.TextButton(
+                    onClick = {
+                        trangThaiNgay.selectedDateMillis?.let { onNgay(dinhDangNgay(it)) }
+                        hienLich = false
+                    },
+                ) { Text("Chọn") }
+            },
+            dismissButton = {
+                androidx.compose.material3.TextButton(onClick = { hienLich = false }) { Text("Hủy") }
+            },
+        ) {
+            androidx.compose.material3.DatePicker(state = trangThaiNgay, showModeToggle = false)
+        }
+    }
+    if (hienDongHo) {
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { hienDongHo = false },
+            confirmButton = {
+                androidx.compose.material3.TextButton(
+                    onClick = {
+                        onGio(dinhDangGio(trangThaiGio.hour, trangThaiGio.minute))
+                        hienDongHo = false
+                    },
+                ) { Text("Chọn") }
+            },
+            dismissButton = {
+                androidx.compose.material3.TextButton(onClick = { hienDongHo = false }) { Text("Hủy") }
+            },
+            text = {
+                androidx.compose.material3.TimePicker(state = trangThaiGio)
+            },
+        )
+    }
+}
+
 @Composable
 fun TeacherHomeScreen(
     activity: Activity,
@@ -98,6 +199,8 @@ fun TeacherHomeScreen(
     // thấy danh sách cũ. Bấm Tải lại sẽ tải lại đúng tài khoản đang
     // đăng nhập, không phụ thuộc vào lần tải đầu tiên.
     var lamMoi by remember { mutableStateOf(0) }
+    var maTim by remember { mutableStateOf("") }
+    var hienTimTheoMa by remember { mutableStateOf(false) }
 
     fun taiLop(gv: GiaoVienDaDangNhap) {
         dangTai = true
@@ -159,20 +262,6 @@ fun TeacherHomeScreen(
                 color = Color.Gray,
             )
             Spacer(Modifier.height(16.dp))
-            Text("Tạo BTVN trắc nghiệm — chọn lớp:", fontSize = 17.sp, fontWeight = FontWeight.Bold)
-            Spacer(Modifier.height(8.dp))
-            if (lopList.isEmpty()) {
-                Text("Cần tạo lớp trước mới tạo được BTVN trắc nghiệm.")
-            } else {
-                lopList.forEach { lop ->
-                    TheThongTin(
-                        tieuDe = "Tạo BTVN trắc nghiệm cho ${lop.tenLop}",
-                        noiDung = "Mã lớp: ${lop.maLop} — chọn câu từ ngân hàng hoặc câu vừa up",
-                        onClick = { onTaoTracNghiemChoLop(lop.maLop) },
-                    )
-                }
-            }
-            Spacer(Modifier.height(16.dp))
             Text("Các lớp của tôi — quản lý lớp:", fontSize = 17.sp, fontWeight = FontWeight.Bold)
             Spacer(Modifier.height(8.dp))
             NutNhoQuanLy("Tải lại danh sách lớp") { lamMoi++ }
@@ -194,6 +283,39 @@ fun TeacherHomeScreen(
                         onQuanLy = { onMoLop(lop.maLop) },
                         onTaoTracNghiem = { onTaoTracNghiemChoLop(lop.maLop) },
                     )
+                }
+            }
+            Spacer(Modifier.height(16.dp))
+            // Đường cứu nhỏ ở cuối, KHÔNG phải bước chính: bình thường
+            // cô chỉ cần bấm vào lớp ở danh sách trên là quản lý được.
+            // Chỉ khi lớp không hiện thì mới bấm đây để mở theo mã.
+            NutPhu("Không thấy lớp? Mở theo mã") { hienTimTheoMa = !hienTimTheoMa }
+            if (hienTimTheoMa) {
+                Spacer(Modifier.height(8.dp))
+                OutlinedTextField(
+                    maTim,
+                    { maTim = it.uppercase() },
+                    label = { Text("Nhập mã lớp, ví dụ: AB12CD") },
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                Spacer(Modifier.height(8.dp))
+                NutNhoQuanLy("Mở lớp theo mã") {
+                    val ma = maTim.trim()
+                    if (ma.isBlank()) {
+                        loi = "Cô nhập mã lớp trước đã."
+                    } else {
+                        scope.launch {
+                            repo.layLopTheoMa(ma)
+                                .onSuccess { lopTim ->
+                                    if (lopTim.giaoVienId.isNotBlank() && lopTim.giaoVienId != gv.uid) {
+                                        loi = "Lớp này thuộc tài khoản khác, không phải tài khoản đang đăng nhập (${gv.email}). Cô hãy đăng nhập đúng tài khoản đã tạo lớp rồi mở lại."
+                                    } else {
+                                        onMoLop(lopTim.maLop)
+                                    }
+                                }
+                                .onFailure { loi = "Không tìm thấy lớp với mã này, cô kiểm tra lại mã lớp." }
+                        }
+                    }
                 }
             }
             Spacer(Modifier.height(16.dp))
@@ -451,9 +573,7 @@ fun TaoBaiGiayScreen(
         Spacer(Modifier.height(8.dp))
         OutlinedTextField(noiDung, { noiDung = it }, label = { Text("Nội dung đề bài") }, modifier = Modifier.fillMaxWidth(), minLines = 3)
         Spacer(Modifier.height(8.dp))
-        OutlinedTextField(ngay, { ngay = it }, label = { Text("Hạn nộp, ngày dd/MM/yyyy") }, modifier = Modifier.fillMaxWidth())
-        Spacer(Modifier.height(8.dp))
-        OutlinedTextField(gio, { gio = it }, label = { Text("Hạn nộp, giờ HH:mm") }, modifier = Modifier.fillMaxWidth())
+        ChonHanNop(ngay = ngay, gio = gio, onNgay = { ngay = it }, onGio = { gio = it })
         Spacer(Modifier.height(12.dp))
         NutPhu(if (anhDeBase64.isBlank()) "Chọn ảnh đề (không bắt buộc)" else "Đổi ảnh đề") {
             chonAnh.launch("image/*")
@@ -461,8 +581,9 @@ fun TaoBaiGiayScreen(
         Spacer(Modifier.height(16.dp))
         NutLon("Giao bài", bat = tieuDe.isNotBlank()) {
             val hanNop = parseNgayGio(ngay, gio)
-            if (hanNop == null) {
-                loi = "Ngày hoặc giờ hạn nộp sai định dạng. Nhập ngày dd/MM/yyyy và giờ HH:mm."
+            val loiHan = loiHanNop(hanNop)
+            if (loiHan != null) {
+                loi = loiHan
                 return@NutLon
             }
             loi = ""
@@ -697,9 +818,7 @@ fun TaoTracNghiemScreen(
         Spacer(Modifier.height(12.dp))
         OutlinedTextField(thoiGianPhut, { thoiGianPhut = it }, label = { Text("Thời gian làm bài (phút)") }, modifier = Modifier.fillMaxWidth())
         Spacer(Modifier.height(8.dp))
-        OutlinedTextField(ngay, { ngay = it }, label = { Text("Hạn nộp, ngày dd/MM/yyyy") }, modifier = Modifier.fillMaxWidth())
-        Spacer(Modifier.height(8.dp))
-        OutlinedTextField(gio, { gio = it }, label = { Text("Hạn nộp, giờ HH:mm") }, modifier = Modifier.fillMaxWidth())
+        ChonHanNop(ngay = ngay, gio = gio, onNgay = { ngay = it }, onGio = { gio = it })
         Spacer(Modifier.height(16.dp))
         val cauIdsCuoi = if (cheDoTuDong) cauTuDong.map { it.id } else cauDaChon.toList()
         // Câu đã nhập được giao kèm ảnh và đáp án đúng trong chính bài giao,
@@ -709,8 +828,9 @@ fun TaoTracNghiemScreen(
         NutLon("Giao bài", bat = tieuDe.isNotBlank() && cauIdsDayDu.isNotEmpty()) {
             val hanNop = parseNgayGio(ngay, gio)
             val phut = thoiGianPhut.toIntOrNull()
-            if (hanNop == null) {
-                loi = "Ngày hoặc giờ hạn nộp sai định dạng. Nhập ngày dd/MM/yyyy và giờ HH:mm."
+            val loiHan = loiHanNop(hanNop)
+            if (loiHan != null) {
+                loi = loiHan
                 return@NutLon
             }
             if (phut == null || phut <= 0) {

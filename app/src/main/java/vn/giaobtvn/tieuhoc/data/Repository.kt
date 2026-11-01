@@ -172,6 +172,10 @@ class FirebaseRepository : GiaoBtvnRepository {
     private val submissionsRef get() = root.child("submissions")
     private val teacherQuestionsRef get() = root.child("teacherQuestions")
     private val commonQuestionsRef get() = root.child("nganHangChung")
+    // Danh sách lớp theo tài khoản: teacherClasses/{uid}/{maLop} = true.
+    // Trang chính đọc thẳng danh sách này, không phụ thuộc vào truy vấn
+    // tìm kiếm theo giaoVienId vốn là chỗ dễ làm lớp vừa tạo không hiện.
+    private val teacherClassesRef get() = root.child("teacherClasses")
 
     /** Gói try/catch chung: lỗi mạng hay lỗi Firebase đều thành Result.failure. */
     private suspend fun <T> anToan(block: suspend () -> T): Result<T> {
@@ -197,13 +201,50 @@ class FirebaseRepository : GiaoBtvnRepository {
             }
             val lop = LopHoc(maLop, tenLop.trim(), giaoVien.uid, giaoVien.ten, emptyMap())
             classesRef.child(maLop).setValue(lop.toMap()).await()
+            // Ghi thêm vào danh sách lớp của tài khoản này, để trang chính
+            // đọc thẳng danh sách này mà không cần tìm kiếm.
+            teacherClassesRef.child(giaoVien.uid).child(maLop).setValue(true).await()
             lop
         }
 
     override suspend fun layLopCuaGiaoVien(giaoVienId: String): Result<List<LopHoc>> =
         anToan {
-            val snap = classesRef.orderByChild("giaoVienId").equalTo(giaoVienId).get().await()
-            snap.children.mapNotNull { docLop(it) }
+            // Cách 1 (chính): đọc thẳng danh sách mã lớp của tài khoản,
+            // rồi tải từng lớp theo mã. Không dùng truy vấn tìm kiếm.
+            val maList = try {
+                val snap = teacherClassesRef.child(giaoVienId).get().await()
+                snap.children.mapNotNull { it.key }
+            } catch (e: Exception) {
+                emptyList()
+            }
+            val tuDanhSach = maList.mapNotNull { ma ->
+                try {
+                    val snap = classesRef.child(ma).get().await()
+                    docLop(snap)
+                } catch (e: Exception) {
+                    null
+                }
+            }
+            // Cách 2 (dự phòng + tự sửa): vẫn thử truy vấn cũ để bắt lớp
+            // tạo từ bản cũ chưa có trong danh sách theo tài khoản, rồi
+            // ghi bù những lớp đó vào danh sách để lần sau đọc thẳng.
+            val tuTruyVan = try {
+                val snap = classesRef.orderByChild("giaoVienId").equalTo(giaoVienId).get().await()
+                snap.children.mapNotNull { docLop(it) }
+            } catch (e: Exception) {
+                emptyList()
+            }
+            val gop = (tuDanhSach + tuTruyVan).distinctBy { it.maLop }
+            for (lop in gop) {
+                if (lop.maLop !in maList) {
+                    try {
+                        teacherClassesRef.child(giaoVienId).child(lop.maLop).setValue(true).await()
+                    } catch (e: Exception) {
+                        // Ghi bù thất bại thì lần sau vẫn đọc được bằng truy vấn, không lỗi.
+                    }
+                }
+            }
+            gop
         }
 
     override suspend fun layLopTheoMa(maLop: String): Result<LopHoc> =
