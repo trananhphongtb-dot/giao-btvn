@@ -47,22 +47,36 @@ interface OcrEngine {
 class MlKitOcrEngine : OcrEngine {
     // Cùng lý do như regexDauCau: [âÂaA] để nhận cả "Câu" có dấu và
     // "Cau" mất dấu do OCR, không dùng (?i) đơn thuần.
-    private val regexOcr = Regex("""^\s*[Cc][âÂaA][uU]\s*(\d+)\s*[.\)]""")
+    // Nhận cả "Bài N" và dấu ":" sau số, vì nhiều đề Toán viết vậy.
+    private val regexOcr = Regex("""^\s*(?:[Cc][âÂaA][uU]|[Bb][àÀaA][iI])\s*(\d+)\s*[.\)\:]""")
+    // Dự phòng cho đề chỉ đánh số trần: chỉ tin khi có từ 2 đầu số trở lên.
+    private val regexOcrSoTran = Regex("""^\s*(\d{1,2})\s*[.\)\:]""")
 
     override suspend fun findQuestionHeaders(bitmap: Bitmap): List<OcrHeader> {
         return try {
             val recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
             val ketQua = recognizer.process(InputImage.fromBitmap(bitmap, 0)).await()
-            val headers = mutableListOf<OcrHeader>()
+            val dong = mutableListOf<Pair<String, Int>>()
             for (block in ketQua.textBlocks) {
                 for (line in block.lines) {
-                    val match = regexOcr.find(line.text.trim()) ?: continue
-                    val so = match.groupValues.getOrNull(1)?.toIntOrNull() ?: continue
                     val top = line.boundingBox?.top ?: continue
-                    headers.add(OcrHeader(soCau = so, topY = top, doTinCay = 80))
+                    dong.add(line.text.trim() to top)
                 }
             }
-            headers.sortedBy { it.topY }.distinctBy { it.soCau }
+            fun headersTheo(regex: Regex): List<OcrHeader> {
+                val headers = mutableListOf<OcrHeader>()
+                for ((text, top) in dong) {
+                    val match = regex.find(text) ?: continue
+                    val so = match.groupValues.getOrNull(1)?.toIntOrNull() ?: continue
+                    headers.add(OcrHeader(soCau = so, topY = top, doTinCay = 80))
+                }
+                return headers.sortedBy { it.topY }.distinctBy { it.soCau }
+            }
+            val chinh = headersTheo(regexOcr)
+            if (chinh.isNotEmpty()) return chinh
+            val soTran = headersTheo(regexOcrSoTran)
+            if (soTran.size >= 2) return soTran
+            emptyList()
         } catch (e: Exception) {
             emptyList()
         }

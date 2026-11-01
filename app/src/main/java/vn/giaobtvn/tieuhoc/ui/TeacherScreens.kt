@@ -1,6 +1,9 @@
 package vn.giaobtvn.tieuhoc.ui
 
 import android.app.Activity
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -56,6 +59,12 @@ import vn.giaobtvn.tieuhoc.data.timBaiNghiTrung
 import vn.giaobtvn.tieuhoc.data.tinhThongKe
 import vn.giaobtvn.tieuhoc.data.trangThaiCuaHocSinh
 
+/** Sao chép mã lớp vào bộ nhớ tạm của máy để cô dán cho học sinh. */
+fun saoChepMaLop(context: Context, maLop: String) {
+    val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
+    clipboard?.setPrimaryClip(ClipData.newPlainText("Mã lớp", maLop))
+}
+
 /** Nhập ngày dd/MM/yyyy và giờ HH:mm, trả về millis, null nếu sai định dạng. */
 fun parseNgayGio(ngay: String, gio: String): Long? {
     return try {
@@ -74,19 +83,25 @@ fun TeacherHomeScreen(
     onMoLop: (String) -> Unit,
     onDoiVai: () -> Unit,
     onNhapCauHoi: () -> Unit = {},
-    // 3 lối vào rõ ràng (bản sửa 11:17): tạo BTVN trắc nghiệm (chọn lớp),
-    // tự up câu hỏi, đóng góp cho ngân hàng BTVN.
+    // 3 lối vào rõ ràng: tạo BTVN trắc nghiệm (chọn lớp), tự up câu hỏi
+    // vào ngân hàng chung, xem ngân hàng BTVN chung.
     onTaoTracNghiemChoLop: (String) -> Unit = {},
-    onDongGop: () -> Unit = {},
+    onNganHangChung: () -> Unit = {},
 ) {
     val scope = rememberCoroutineScope()
     var giaoVien by remember { mutableStateOf(DangNhapGoogle.giaoVienHienTai()) }
     var lopList by remember { mutableStateOf<List<LopHoc>>(emptyList()) }
     var dangTai by remember { mutableStateOf(false) }
     var loi by remember { mutableStateOf("") }
+    // Số lần bấm Tải lại: danh sách lớp trước đây chỉ tải 1 lần khi mở
+    // màn, nên lớp vừa tạo xong mà quay lại trang chính vẫn có thể
+    // thấy danh sách cũ. Bấm Tải lại sẽ tải lại đúng tài khoản đang
+    // đăng nhập, không phụ thuộc vào lần tải đầu tiên.
+    var lamMoi by remember { mutableStateOf(0) }
 
     fun taiLop(gv: GiaoVienDaDangNhap) {
         dangTai = true
+        loi = ""
         scope.launch {
             repo.layLopCuaGiaoVien(gv.uid)
                 .onSuccess { lopList = it }
@@ -94,7 +109,7 @@ fun TeacherHomeScreen(
             dangTai = false
         }
     }
-    LaunchedEffect(giaoVien?.uid) {
+    LaunchedEffect(giaoVien?.uid, lamMoi) {
         giaoVien?.let { taiLop(it) }
     }
 
@@ -114,21 +129,32 @@ fun TeacherHomeScreen(
             }
         } else {
             Text("Xin chào, ${gv.ten}", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+            // Hiện rõ email đang đăng nhập, vì lớp chỉ hiện theo đúng
+            // tài khoản đã tạo lớp. Nếu cô vừa đăng nhập vai học sinh
+            // bằng Gmail khác rồi quay lại vai giáo viên, tài khoản ở
+            // đây sẽ khác tài khoản tạo lớp, và lớp cũ sẽ không hiện.
+            if (gv.email.isNotBlank()) {
+                Text("Tài khoản: ${gv.email}", fontSize = 15.sp, color = Color.DarkGray)
+            }
+            if (loi.isNotBlank()) {
+                Spacer(Modifier.height(8.dp))
+                Text(loi, fontSize = 15.sp, color = Color(0xFFD32F2F), fontWeight = FontWeight.Bold)
+            }
             Spacer(Modifier.height(16.dp))
             NutLon("Tạo lớp mới", onClick = onTaoLop)
             Spacer(Modifier.height(8.dp))
             NutLon("Tự up câu hỏi", onClick = onNhapCauHoi)
             Text(
                 "Up file ảnh, PDF hoặc DOCX, máy cắt thử thành từng câu, " +
-                    "cô duyệt rồi lưu vào ngân hàng riêng, dùng ngay để tạo bài.",
+                    "cô duyệt rồi lưu vào ngân hàng chung, giáo viên khác cũng dùng được.",
                 fontSize = 14.sp,
                 color = Color.Gray,
             )
             Spacer(Modifier.height(8.dp))
-            NutLon("Đóng góp cho ngân hàng BTVN", onClick = onDongGop)
+            NutLon("Ngân hàng BTVN chung", onClick = onNganHangChung)
             Text(
-                "Cũng là luồng up + duyệt câu hỏi, nhưng câu chốt sẽ có cờ " +
-                    "đóng góp để học sinh lớp của cô ôn tập từ các câu này.",
+                "Xem và tìm câu giáo viên khác đã tạo theo Môn, Lớp, Bài, " +
+                    "Chuyên đề, rồi dùng để giao bài cho lớp của cô.",
                 fontSize = 14.sp,
                 color = Color.Gray,
             )
@@ -147,7 +173,15 @@ fun TeacherHomeScreen(
                 }
             }
             Spacer(Modifier.height(16.dp))
-            Text("Các lớp của tôi:", fontSize = 17.sp, fontWeight = FontWeight.Bold)
+            Text("Các lớp của tôi — quản lý lớp:", fontSize = 17.sp, fontWeight = FontWeight.Bold)
+            Spacer(Modifier.height(8.dp))
+            NutNhoQuanLy("Tải lại danh sách lớp") { lamMoi++ }
+            Text(
+                "Vừa tạo lớp xong mà chưa thấy lớp hiện ra thì bấm nút này, " +
+                    "không cần thoát app hay đăng nhập lại.",
+                fontSize = 14.sp,
+                color = Color.Gray,
+            )
             Spacer(Modifier.height(8.dp))
             if (dangTai) {
                 Text("Đang tải...")
@@ -155,10 +189,10 @@ fun TeacherHomeScreen(
                 Text("Chưa có lớp nào. Hãy tạo lớp đầu tiên rồi chia sẻ mã lớp cho học sinh.")
             } else {
                 lopList.forEach { lop ->
-                    TheThongTin(
-                        tieuDe = lop.tenLop,
-                        noiDung = "Mã lớp: ${lop.maLop} — ${lop.hocSinh.size} học sinh",
-                        onClick = { onMoLop(lop.maLop) },
+                    TheQuanLyLop(
+                        lop = lop,
+                        onQuanLy = { onMoLop(lop.maLop) },
+                        onTaoTracNghiem = { onTaoTracNghiemChoLop(lop.maLop) },
                     )
                 }
             }
@@ -175,6 +209,56 @@ fun TeacherHomeScreen(
     }
 }
 
+/**
+ * Thẻ quản lý 1 lớp trên trang chính giáo viên: tên lớp luôn đi kèm mã
+ * lớp ở ngay sau tên, mã sao chép được bằng 1 nút, và có nút "Quản lý
+ * lớp" rõ ràng để vào màn quản lý (danh sách học sinh, bài đã giao),
+ * không phải đoán là bấm vào tên lớp.
+ */
+@Composable
+fun TheQuanLyLop(
+    lop: LopHoc,
+    onQuanLy: () -> Unit,
+    onTaoTracNghiem: () -> Unit,
+) {
+    val context = LocalContext.current
+    var daSaoChep by remember { mutableStateOf(false) }
+    androidx.compose.material3.Card(
+        colors = androidx.compose.material3.CardDefaults.cardColors(containerColor = Color.White),
+        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+    ) {
+        Column(Modifier.padding(16.dp)) {
+            Text("${lop.tenLop} — Mã: ${lop.maLop}", fontSize = 17.sp, fontWeight = FontWeight.Bold)
+            Spacer(Modifier.height(4.dp))
+            Text("${lop.hocSinh.size} học sinh đã tham gia", fontSize = 15.sp, color = Color.DarkGray)
+            Spacer(Modifier.height(12.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                NutNhoQuanLy("Quản lý lớp", onClick = onQuanLy)
+                NutNhoQuanLy("Sao chép mã") {
+                    saoChepMaLop(context, lop.maLop)
+                    daSaoChep = true
+                }
+            }
+            if (daSaoChep) {
+                Spacer(Modifier.height(4.dp))
+                Text("Đã sao chép mã ${lop.maLop}", fontSize = 14.sp, color = Color(0xFF2E7D32))
+            }
+            Spacer(Modifier.height(8.dp))
+            NutNhoQuanLy("Giao bài trắc nghiệm", onClick = onTaoTracNghiem)
+        }
+    }
+}
+
+@Composable
+fun NutNhoQuanLy(text: String, onClick: () -> Unit) {
+    androidx.compose.material3.OutlinedButton(
+        onClick = onClick,
+        modifier = Modifier.padding(end = 8.dp),
+    ) {
+        Text(text, fontSize = 14.sp)
+    }
+}
+
 @Composable
 fun TaoLopScreen(
     repo: GiaoBtvnRepository,
@@ -183,10 +267,12 @@ fun TaoLopScreen(
     onBack: () -> Unit,
 ) {
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
     var tenLop by remember { mutableStateOf("") }
     var lopMoi by remember { mutableStateOf<LopHoc?>(null) }
     var loi by remember { mutableStateOf("") }
     var dangTao by remember { mutableStateOf(false) }
+    var daSaoChep by remember { mutableStateOf(false) }
 
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp)) {
         TieuDeManHinh("Tạo lớp mới")
@@ -211,10 +297,21 @@ fun TaoLopScreen(
         if (moi != null) {
             Spacer(Modifier.height(16.dp))
             Text("Đã tạo lớp thành công!", fontSize = 17.sp, fontWeight = FontWeight.Bold)
-            Text("Mã lớp: ${moi.maLop}", fontSize = 22.sp, fontWeight = FontWeight.Bold)
+            Text("${moi.tenLop} — Mã: ${moi.maLop}", fontSize = 22.sp, fontWeight = FontWeight.Bold)
             Text("Chia sẻ mã này cho học sinh để các em tham gia lớp.")
             Spacer(Modifier.height(12.dp))
-            NutLon("Vào lớp này") { onVaoLop(moi.maLop) }
+            NutLon("Sao chép mã lớp") {
+                saoChepMaLop(context, moi.maLop)
+                daSaoChep = true
+            }
+            if (daSaoChep) {
+                Spacer(Modifier.height(4.dp))
+                Text("Đã sao chép mã ${moi.maLop}", fontSize = 15.sp, color = Color(0xFF2E7D32))
+            }
+            Spacer(Modifier.height(8.dp))
+            NutLon("Vào lớp này — Quản lý lớp") { onVaoLop(moi.maLop) }
+            Spacer(Modifier.height(8.dp))
+            NutPhu("Về trang chính — xem lớp vừa tạo") { onBack() }
         }
         ThongBaoLoi(loi)
         Spacer(Modifier.height(16.dp))
@@ -232,17 +329,25 @@ fun LopDetailScreen(
     onBack: () -> Unit,
 ) {
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
     var lop by remember { mutableStateOf<LopHoc?>(null) }
     var baiList by remember { mutableStateOf<List<BaiGiao>>(emptyList()) }
     var loi by remember { mutableStateOf("") }
+    var daSaoChep by remember { mutableStateOf(false) }
+
+    fun taiLai() {
+        scope.launch {
+            repo.layLopTheoMa(maLop)
+                .onSuccess { lop = it }
+                .onFailure { loi = "Không tải được lớp này" }
+            repo.layBaiGiaoTheoLop(maLop)
+                .onSuccess { baiList = it }
+                .onFailure { loi = "Không tải được danh sách bài giao" }
+        }
+    }
 
     LaunchedEffect(maLop) {
-        repo.layLopTheoMa(maLop)
-            .onSuccess { lop = it }
-            .onFailure { loi = "Không tải được lớp này" }
-        repo.layBaiGiaoTheoLop(maLop)
-            .onSuccess { baiList = it }
-            .onFailure { loi = "Không tải được danh sách bài giao" }
+        taiLai()
     }
 
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp)) {
@@ -251,11 +356,38 @@ fun LopDetailScreen(
             lopHienTai?.tenLop ?: "Lớp $maLop",
             if (lopHienTai != null) "Mã lớp: ${lopHienTai.maLop}" else "",
         )
+        // Mã lớp luôn hiện ngay sau tên lớp và sao chép được, để cô
+        // không phải quay lại trang chính mới thấy mã.
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                "Mã lớp: $maLop",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+            )
+            Spacer(Modifier.width(12.dp))
+            NutNhoQuanLy("Sao chép mã") {
+                saoChepMaLop(context, maLop)
+                daSaoChep = true
+            }
+        }
+        if (daSaoChep) {
+            Spacer(Modifier.height(4.dp))
+            Text("Đã sao chép mã $maLop", fontSize = 15.sp, color = Color(0xFF2E7D32))
+        }
+        Spacer(Modifier.height(12.dp))
         NutLon("Giao bài giấy (chụp ảnh)", onClick = onTaoBaiGiay)
         Spacer(Modifier.height(8.dp))
         NutLon("Giao bài trắc nghiệm", onClick = onTaoTracNghiem)
         Spacer(Modifier.height(20.dp))
         Text("Học sinh trong lớp (${lopHienTai?.hocSinh?.size ?: 0}):", fontSize = 17.sp, fontWeight = FontWeight.Bold)
+        Spacer(Modifier.height(8.dp))
+        NutNhoQuanLy("Tải lại danh sách học sinh") { taiLai() }
+        Text(
+            "Học sinh vào lớp sau khi cô mở màn này thì bấm nút trên để " +
+                "danh sách cập nhật, không cần thoát ra vào lại.",
+            fontSize = 14.sp,
+            color = Color.Gray,
+        )
         Spacer(Modifier.height(8.dp))
         if (lopHienTai?.hocSinh.isNullOrEmpty()) {
             Text("Chưa có học sinh nào tham gia. Chia sẻ mã lớp cho các em.")
@@ -367,20 +499,28 @@ fun TaoTracNghiemScreen(
     var soVua by remember { mutableStateOf("3") }
     var soKho by remember { mutableStateOf("2") }
     var cauDaChon by remember { mutableStateOf<Set<String>>(emptySet()) }
-    // Câu trắc nghiệm ảnh do cô nhập từ file, lọc theo Môn/Chương/tag/
-    // mức độ (bản sửa 11:17, không lọc theo Bài nữa).
+    // Câu trắc nghiệm ảnh từ NGÂN HÀNG CHUNG (cộng thêm câu riêng cũ
+    // nếu còn, tránh trùng id), lọc theo Môn/Lớp/Chương/Bài/Chuyên đề/
+    // tag/mức độ.
     var cauNhap by remember { mutableStateOf<List<ImportedQuestion>>(emptyList()) }
     var locMonNhap by remember { mutableStateOf("") }
+    var locLopNhap by remember { mutableStateOf("") }
     var locChuongNhap by remember { mutableStateOf("") }
+    var locBaiNhap by remember { mutableStateOf("") }
+    var locChuyenDeNhap by remember { mutableStateOf("") }
     var locTagNhap by remember { mutableStateOf("") }
     var locDoKhoNhap by remember { mutableStateOf<Int?>(null) }
     var cauNhapDaChon by remember { mutableStateOf<Set<String>>(emptySet()) }
 
     LaunchedEffect(giaoVienId) {
-        if (giaoVienId.isNotBlank()) {
-            repo.loadTeacherQuestions(giaoVienId)
-                .onSuccess { cauNhap = it.filter { cau -> cau.dang == "TRAC_NGHIEM_ANH" } }
+        val chung = repo.loadCommonQuestions().getOrNull() ?: emptyList()
+        val riengCu = if (giaoVienId.isNotBlank()) {
+            repo.loadTeacherQuestions(giaoVienId).getOrNull() ?: emptyList()
+        } else {
+            emptyList()
         }
+        val gop = (chung + riengCu).distinctBy { it.id }
+        cauNhap = gop.filter { cau -> cau.dang == "TRAC_NGHIEM_ANH" }
     }
     var thoiGianPhut by remember { mutableStateOf("15") }
     var ngay by remember { mutableStateOf("") }
@@ -462,19 +602,24 @@ fun TaoTracNghiemScreen(
             }
         }
         Spacer(Modifier.height(12.dp))
-        Text("Câu hỏi đã nhập của cô (trắc nghiệm ảnh):", fontWeight = FontWeight.Bold)
+        Text("Câu hỏi từ ngân hàng BTVN chung (trắc nghiệm ảnh):", fontWeight = FontWeight.Bold)
         if (cauNhap.isEmpty()) {
             Text(
-                "Cô chưa nhập câu trắc nghiệm nào. Về trang giáo viên, bấm " +
-                    "\"Tự up câu hỏi\" hoặc \"Đóng góp cho ngân hàng BTVN\" để " +
-                    "nhập file rồi quay lại đây.",
+                "Ngân hàng chung chưa có câu trắc nghiệm nào. Về trang giáo viên, bấm " +
+                    "\"Tự up câu hỏi\" để nhập file, hoặc bấm \"Ngân hàng BTVN chung\" để xem câu giáo viên khác đã tạo.",
                 fontSize = 15.sp,
                 color = Color.Gray,
             )
         } else {
             OutlinedTextField(locMonNhap, { locMonNhap = it }, label = { Text("Lọc theo Môn (để trống = tất cả)") }, modifier = Modifier.fillMaxWidth())
             Spacer(Modifier.height(8.dp))
+            OutlinedTextField(locLopNhap, { locLopNhap = it }, label = { Text("Lọc theo Lớp, ví dụ: Lớp 10 (để trống = tất cả)") }, modifier = Modifier.fillMaxWidth())
+            Spacer(Modifier.height(8.dp))
             OutlinedTextField(locChuongNhap, { locChuongNhap = it }, label = { Text("Lọc theo Chương (để trống = tất cả)") }, modifier = Modifier.fillMaxWidth())
+            Spacer(Modifier.height(8.dp))
+            OutlinedTextField(locBaiNhap, { locBaiNhap = it }, label = { Text("Lọc theo Bài (để trống = tất cả)") }, modifier = Modifier.fillMaxWidth())
+            Spacer(Modifier.height(8.dp))
+            OutlinedTextField(locChuyenDeNhap, { locChuyenDeNhap = it }, label = { Text("Lọc theo Chuyên đề (để trống = tất cả)") }, modifier = Modifier.fillMaxWidth())
             Spacer(Modifier.height(8.dp))
             OutlinedTextField(locTagNhap, { locTagNhap = it }, label = { Text("Lọc theo thẻ, ví dụ: OXY (để trống = tất cả)") }, modifier = Modifier.fillMaxWidth())
             Spacer(Modifier.height(8.dp))
@@ -494,11 +639,14 @@ fun TaoTracNghiemScreen(
             Spacer(Modifier.height(8.dp))
             val cauNhapLoc = cauNhap.filter { cau ->
                 (locMonNhap.isBlank() || cau.mon.contains(locMonNhap, ignoreCase = true)) &&
+                    (locLopNhap.isBlank() || cau.khoi.contains(locLopNhap, ignoreCase = true)) &&
                     (locChuongNhap.isBlank() || cau.chuong.contains(locChuongNhap, ignoreCase = true)) &&
+                    (locBaiNhap.isBlank() || (cau.bai ?: "").contains(locBaiNhap, ignoreCase = true)) &&
+                    (locChuyenDeNhap.isBlank() || cau.chuyenDe.contains(locChuyenDeNhap, ignoreCase = true)) &&
                     (locTagNhap.isBlank() || cau.tags.any { tag -> tag.contains(locTagNhap, ignoreCase = true) }) &&
                     (locDoKhoNhap == null || cau.doKho == locDoKhoNhap)
             }
-            Text("Đã chọn ${cauNhapDaChon.size} câu đã nhập, trong ${cauNhapLoc.size} câu khớp bộ lọc:", fontWeight = FontWeight.Bold)
+            Text("Đã chọn ${cauNhapDaChon.size} câu ngân hàng chung, trong ${cauNhapLoc.size} câu khớp bộ lọc:", fontWeight = FontWeight.Bold)
             cauNhapLoc.forEach { cau ->
                 Column(Modifier.fillMaxWidth().padding(vertical = 6.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -509,7 +657,11 @@ fun TaoTracNghiemScreen(
                             },
                         )
                         Text(
-                            "${cau.mon} • ${cau.chuong}" +
+                            "${cau.mon} • ${cau.khoi}" +
+                                (if (cau.chuong.isNotBlank()) " • ${cau.chuong}" else "") +
+                                (if (!cau.bai.isNullOrBlank()) " • Bài: ${cau.bai}" else "") +
+                                (if (cau.chuyenDe.isNotBlank()) " • Chuyên đề: ${cau.chuyenDe}" else "") +
+                                (if (cau.giaoVienTen.isNotBlank()) " • Tạo bởi: ${cau.giaoVienTen}" else "") +
                                 (if (cau.tags.isNotEmpty()) " • Thẻ: ${cau.tags.joinToString(", ")}" else "") +
                                 (if (cau.doKho != null) " • Mức độ: ${cau.doKho}" else ""),
                             fontSize = 15.sp,

@@ -146,12 +146,23 @@ interface GiaoBtvnRepository {
 
     /**
      * Ngân hàng câu hỏi riêng của cô, nhập từ file và đã qua duyệt:
-     * lưu vào cây teacherQuestions/{giaoVienId}/{questionId}, chưa chia
-     * sẻ chéo giữa các cô ở bản này.
+     * lưu vào cây teacherQuestions/{giaoVienId}/{questionId}. Chỉ giữ
+     * để đọc câu cũ, câu mới không lưu vào đây nữa.
      */
     suspend fun saveTeacherQuestions(giaoVienId: String, questions: List<ImportedQuestion>): Result<Unit>
     suspend fun loadTeacherQuestions(giaoVienId: String): Result<List<ImportedQuestion>>
     suspend fun deleteTeacherQuestion(giaoVienId: String, questionId: String): Result<Unit>
+
+    /**
+     * NGÂN HÀNG CHUNG (chốt 2026-11-01): câu cô nào tạo rồi thì giáo
+     * viên khác cũng dùng được. Lưu vào cây nganHangChung/{questionId},
+     * mỗi câu gắn Môn, Khối lớp, Chương, Bài, Chuyên đề. Chỉ người tạo
+     * (giaoVienId trùng người yêu cầu) mới xóa được câu của mình,
+     * người khác chỉ dùng nguyên bản để giao bài cho lớp của mình.
+     */
+    suspend fun saveCommonQuestions(questions: List<ImportedQuestion>): Result<Unit>
+    suspend fun loadCommonQuestions(): Result<List<ImportedQuestion>>
+    suspend fun deleteCommonQuestion(questionId: String, giaoVienId: String): Result<Unit>
 }
 
 class FirebaseRepository : GiaoBtvnRepository {
@@ -160,6 +171,7 @@ class FirebaseRepository : GiaoBtvnRepository {
     private val assignmentsRef get() = root.child("assignments")
     private val submissionsRef get() = root.child("submissions")
     private val teacherQuestionsRef get() = root.child("teacherQuestions")
+    private val commonQuestionsRef get() = root.child("nganHangChung")
 
     /** Gói try/catch chung: lỗi mạng hay lỗi Firebase đều thành Result.failure. */
     private suspend fun <T> anToan(block: suspend () -> T): Result<T> {
@@ -325,6 +337,29 @@ class FirebaseRepository : GiaoBtvnRepository {
         anToan {
             teacherQuestionsRef.child(giaoVienId).child(questionId).removeValue().await()
         }
+
+    override suspend fun saveCommonQuestions(questions: List<ImportedQuestion>): Result<Unit> =
+        anToan {
+            for (cau in questions) {
+                commonQuestionsRef.child(cau.id).setValue(cau.toMap()).await()
+            }
+        }
+
+    override suspend fun loadCommonQuestions(): Result<List<ImportedQuestion>> =
+        anToan {
+            val snap = commonQuestionsRef.get().await()
+            snap.children.mapNotNull { docCauNhap(it) }.sortedBy { it.thuTu }
+        }
+
+    override suspend fun deleteCommonQuestion(questionId: String, giaoVienId: String): Result<Unit> =
+        anToan {
+            val snap = commonQuestionsRef.child(questionId).get().await()
+            val cau = docCauNhap(snap) ?: throw Exception("Không tìm thấy câu này trong ngân hàng chung")
+            if (cau.giaoVienId.isNotBlank() && cau.giaoVienId != giaoVienId) {
+                throw Exception("Chỉ người tạo mới xóa được câu này")
+            }
+            commonQuestionsRef.child(questionId).removeValue().await()
+        }
 }
 
 // ============================================================================
@@ -418,6 +453,8 @@ private fun docCauNhap(snap: DataSnapshot): ImportedQuestion? {
         doTinCay = snapInt(snap, "doTinCay"),
         tags = snapStringList(snap, "tags"),
         nguonDongGop = snapString(snap, "nguonDongGop"),
+        chuyenDe = snapString(snap, "chuyenDe"),
+        giaoVienTen = snapString(snap, "giaoVienTen"),
     )
 }
 

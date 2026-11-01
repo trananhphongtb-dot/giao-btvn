@@ -22,6 +22,7 @@ import vn.giaobtvn.tieuhoc.ui.GiaoBtvnTheme
 import vn.giaobtvn.tieuhoc.ui.LamTracNghiemScreen
 import vn.giaobtvn.tieuhoc.ui.LopDetailScreen
 import vn.giaobtvn.tieuhoc.ui.ManDangTai
+import vn.giaobtvn.tieuhoc.ui.NganHangChungScreen
 import vn.giaobtvn.tieuhoc.ui.NhapCauHoiScreen
 import vn.giaobtvn.tieuhoc.ui.NopBaiGiayScreen
 import vn.giaobtvn.tieuhoc.ui.OnTuDoScreen
@@ -40,8 +41,8 @@ import vn.giaobtvn.tieuhoc.ui.TeacherHomeScreen
 private sealed class GiaoVienRoute {
     data object Home : GiaoVienRoute()
     data object TaoLop : GiaoVienRoute()
-    // dongGop = true: cô đóng góp cho ngân hàng BTVN (câu chốt có cờ đóng
-    // góp); false: cô tự up câu hỏi dùng riêng. Cùng một luồng nhập.
+    data object NganHangChung : GiaoVienRoute()
+    // Luồng nhập chung: mọi câu chốt đều vào ngân hàng chung.
     data class NhapCauHoi(val dongGop: Boolean = false) : GiaoVienRoute()
     data class LopDetail(val maLop: String) : GiaoVienRoute()
     data class TaoBaiGiay(val maLop: String) : GiaoVienRoute()
@@ -132,7 +133,7 @@ class MainActivity : ComponentActivity() {
                                         onDoiVai = { doiVai() },
                                         onNhapCauHoi = { giaoVienRoute = GiaoVienRoute.NhapCauHoi(dongGop = false) },
                                         onTaoTracNghiemChoLop = { giaoVienRoute = GiaoVienRoute.TaoTracNghiem(it) },
-                                        onDongGop = { giaoVienRoute = GiaoVienRoute.NhapCauHoi(dongGop = true) },
+                                        onNganHangChung = { giaoVienRoute = GiaoVienRoute.NganHangChung },
                                     )
                                 }
                                 is GiaoVienRoute.NhapCauHoi -> {
@@ -146,7 +147,7 @@ class MainActivity : ComponentActivity() {
                                             onDoiVai = { doiVai() },
                                             onNhapCauHoi = { giaoVienRoute = GiaoVienRoute.NhapCauHoi(dongGop = false) },
                                             onTaoTracNghiemChoLop = { giaoVienRoute = GiaoVienRoute.TaoTracNghiem(it) },
-                                            onDongGop = { giaoVienRoute = GiaoVienRoute.NhapCauHoi(dongGop = true) },
+                                            onNganHangChung = { giaoVienRoute = GiaoVienRoute.NganHangChung },
                                         )
                                     } else {
                                         BackHandler { giaoVienRoute = GiaoVienRoute.Home }
@@ -156,6 +157,28 @@ class MainActivity : ComponentActivity() {
                                             onXong = { giaoVienRoute = GiaoVienRoute.Home },
                                             onBack = { giaoVienRoute = GiaoVienRoute.Home },
                                             dongGop = route.dongGop,
+                                        )
+                                    }
+                                }
+                                GiaoVienRoute.NganHangChung -> {
+                                    val gv = DangNhapGoogle.giaoVienHienTai()
+                                    if (gv == null) {
+                                        TeacherHomeScreen(
+                                            activity = this@MainActivity,
+                                            repo = repo,
+                                            onTaoLop = { giaoVienRoute = GiaoVienRoute.TaoLop },
+                                            onMoLop = { giaoVienRoute = GiaoVienRoute.LopDetail(it) },
+                                            onDoiVai = { doiVai() },
+                                            onNhapCauHoi = { giaoVienRoute = GiaoVienRoute.NhapCauHoi(dongGop = false) },
+                                            onTaoTracNghiemChoLop = { giaoVienRoute = GiaoVienRoute.TaoTracNghiem(it) },
+                                            onNganHangChung = { giaoVienRoute = GiaoVienRoute.NganHangChung },
+                                        )
+                                    } else {
+                                        BackHandler { giaoVienRoute = GiaoVienRoute.Home }
+                                        NganHangChungScreen(
+                                            repo = repo,
+                                            giaoVien = gv,
+                                            onBack = { giaoVienRoute = GiaoVienRoute.Home },
                                         )
                                     }
                                 }
@@ -173,7 +196,7 @@ class MainActivity : ComponentActivity() {
                                             onDoiVai = { doiVai() },
                                             onNhapCauHoi = { giaoVienRoute = GiaoVienRoute.NhapCauHoi(dongGop = false) },
                                             onTaoTracNghiemChoLop = { giaoVienRoute = GiaoVienRoute.TaoTracNghiem(it) },
-                                            onDongGop = { giaoVienRoute = GiaoVienRoute.NhapCauHoi(dongGop = true) },
+                                            onNganHangChung = { giaoVienRoute = GiaoVienRoute.NganHangChung },
                                         )
                                     } else {
                                         BackHandler { giaoVienRoute = GiaoVienRoute.Home }

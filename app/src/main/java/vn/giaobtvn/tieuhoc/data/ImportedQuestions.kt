@@ -8,9 +8,11 @@ import android.graphics.Typeface
 import java.util.UUID
 
 // ============================================================================
-// CÂU HỎI NHẬP TỪ FILE — ngân hàng riêng của từng cô, khác với ngân hàng
-// trong assets. Cách cắt đã chốt: CẮT TỰ ĐỘNG + CÔ DUYỆT LẠI, không giao
-// câu nào chưa qua màn duyệt.
+// CÂU HỎI NHẬP TỪ FILE — NGÂN HÀNG CHUNG (chốt 2026-11-01): câu cô nào
+// tạo/up rồi thì giáo viên khác cũng dùng được, không còn ngân hàng
+// riêng theo từng cô nữa. Câu cũ lưu riêng vẫn đọc được để dùng nốt,
+// nhưng câu mới luôn lưu vào cây nganHangChung. Cách cắt đã chốt:
+// CẮT TỰ ĐỘNG + CÔ DUYỆT LẠI, không giao câu nào chưa qua màn duyệt.
 // ============================================================================
 
 /** VIET = bài viết làm ra giấy, TRAC_NGHIEM_ANH = trắc nghiệm, đề là ảnh từng câu. */
@@ -49,14 +51,16 @@ data class ImportedQuestion(
     /** Thẻ nội dung sau khi cô sửa ở màn duyệt, ví dụ DUONG_TRON, OXY, BAC_2. */
     val tags: List<String> = emptyList(),
     /**
-     * Cờ đóng góp: rỗng = câu cô tự up dùng riêng; bằng giaoVienId = câu
-     * cô đóng góp cho ngân hàng BTVN (để học sinh ôn tập). Ở bản này
-     * ngân hàng vẫn lưu riêng theo từng cô, cờ này để phân biệt nguồn
-     * và để mở rộng chia sẻ chéo về sau.
+     * Cờ đóng góp cũ: giữ lại để đọc câu cũ, câu mới trong ngân hàng
+     * chung không còn phân biệt riêng/chung bằng cờ này nữa.
      */
     val nguonDongGop: String = "",
+    /** Chuyên đề của câu, ví dụ: "Đường tròn", "Phân số" — trục lọc thứ 3 của ngân hàng chung. */
+    val chuyenDe: String = "",
+    /** Tên người tạo câu, để ngân hàng chung hiện rõ ai tạo, ai sửa được. */
+    val giaoVienTen: String = "",
 ) {
-    constructor() : this("", "", "", "", "", null, "VIET", "", null, null, null, "DA_DUYET", "", 0, 0, 100, emptyList(), "")
+    constructor() : this("", "", "", "", "", null, "VIET", "", null, null, null, "DA_DUYET", "", 0, 0, 100, emptyList(), "", "", "")
 
     val dangEnum: DangBai
         get() = if (dang == "TRAC_NGHIEM_ANH") DangBai.TRAC_NGHIEM_ANH else DangBai.VIET
@@ -80,6 +84,8 @@ data class ImportedQuestion(
         "doTinCay" to doTinCay,
         "tags" to tags,
         "nguonDongGop" to nguonDongGop,
+        "chuyenDe" to chuyenDe,
+        "giaoVienTen" to giaoVienTen,
     )
 
     /**
@@ -119,6 +125,9 @@ data class SplitCandidate(
     /** Môn/Chương gợi ý (mặc định lấy từ nhánh cô chọn trước khi cắt). */
     val mon: String = "",
     val chuong: String = "",
+    /** Bài và Chuyên đề gợi ý, cô sửa được ở màn duyệt. */
+    val bai: String = "",
+    val chuyenDe: String = "",
     /** Thẻ nội dung gợi ý từ classifyQuestion, cô sửa được ở màn duyệt. */
     val tags: List<String> = emptyList(),
     /** Mức độ gợi ý 1..3, null = chưa gợi ý được, cô tự gắn. */
@@ -147,15 +156,25 @@ data class KetQuaTachText(val doanMoDau: String, val cau: List<CauDaTach>)
 
 /**
  * Regex đầu câu, áp dụng ở đầu dòng (multiline):
- * "Câu 1.", "Câu 1)", "CÂU 12.", "Cau 1." (OCR mất dấu) đều nhận.
- * Lớp ký tự [âÂaA] là bắt buộc vì [Aa] KHÔNG khớp chữ "â" trong "Câu" —
- * lỗi này đã được script kiểm tra bắt được, không dùng (?i) đơn thuần
- * vì Java/Kotlin không gấp chữ â/Â khi thiếu UNICODE_CASE.
- * Chỉ nhận dấu "." hoặc ")" sau số, đúng như thiết kế đã chốt, không
- * nhận dấu ":" để tránh nhầm với câu văn thường có chữ "Câu" ở giữa dòng.
+ * "Câu 1.", "Câu 1)", "Câu 1:", "Bài 1.", "CÂU 12.", "Cau 1." (OCR mất
+ * dấu) đều nhận. Lớp ký tự [âÂaA] là bắt buộc vì [Aa] KHÔNG khớp chữ
+ * "â" trong "Câu" — lỗi này đã được script kiểm tra bắt được, không dùng
+ * (?i) đơn thuần vì Java/Kotlin không gấp chữ â/Â khi thiếu UNICODE_CASE.
+ * Dấu ":" được nhận từ bản này vì nhiều đề Toán viết "Câu 1:"; chỉ nhận
+ * ở đầu dòng nên vẫn tránh nhầm với câu văn thường có chữ "Câu" ở giữa.
  */
 private val regexDauCau = Regex(
-    """(?m)^\s*[Cc][âÂaA][uU]\s*(\d+)\s*[.\)]\s*""",
+    """(?m)^\s*(?:[Cc][âÂaA][uU]|[Bb][àÀaA][iI])\s*(\d+)\s*[.\)\:]\s*""",
+)
+
+/**
+ * Regex dự phòng cho đề chỉ đánh số trần: "1.", "1)", "1:" ở đầu dòng
+ * mà không có chữ Câu/Bài. Chỉ dùng khi regex chính không tìm được đầu
+ * câu nào, và chỉ tin khi có từ 2 đầu số trở lên, để tránh nhầm với
+ * danh sách con (đáp án, ý nhỏ) bên trong 1 câu hỏi.
+ */
+private val regexSoTran = Regex(
+    """(?m)^\s*(\d{1,2})\s*[.\)\:]\s+""",
 )
 
 /**
@@ -174,7 +193,12 @@ fun splitTextQuestions(text: String): List<String> {
  * tự ý bỏ, vì có đề viết hướng dẫn quan trọng ở phần này.
  */
 fun tachTextCoMoDau(text: String): KetQuaTachText {
-    val matches = regexDauCau.findAll(text).toList()
+    var matches = regexDauCau.findAll(text).toList()
+    if (matches.isEmpty()) {
+        // Đề chỉ đánh số trần: chỉ tin khi có từ 2 đầu số trở lên.
+        val soTran = regexSoTran.findAll(text).toList()
+        if (soTran.size >= 2) matches = soTran
+    }
     if (matches.isEmpty()) return KetQuaTachText(doanMoDau = text.trim(), cau = emptyList())
     val moDau = text.substring(0, matches.first().range.first).trim()
     val cau = matches.mapIndexed { index, match ->
@@ -270,4 +294,24 @@ fun tachBitmapDoc(bitmap: Bitmap, tiLe: Float): Pair<Bitmap, Bitmap> {
     val tren = Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, yCat)
     val duoi = Bitmap.createBitmap(bitmap, 0, yCat, bitmap.width, bitmap.height - yCat)
     return tren to duoi
+}
+
+/**
+ * Tách tay 1 ảnh thành N mảnh đều nhau theo chiều cao, dùng cho nút
+ * "Tách tay thành N câu" ở màn duyệt khi máy không nhận được đầu câu
+ * nào (ảnh chụp nghiêng, đề chỉ đánh số, công thức toán OCR kém).
+ * Cô tự đếm số câu trong ảnh rồi nhập N, không cần kéo pixel chính xác.
+ */
+fun tachBitmapThanhNhieu(bitmap: Bitmap, soManh: Int): List<Bitmap> {
+    val n = soManh.coerceIn(1, 20)
+    if (n == 1) return listOf(bitmap)
+    val ketQua = mutableListOf<Bitmap>()
+    for (i in 0 until n) {
+        val y0 = (bitmap.height * i / n)
+        val y1 = if (i == n - 1) bitmap.height else (bitmap.height * (i + 1) / n)
+        if (y1 - y0 >= 10) {
+            ketQua.add(Bitmap.createBitmap(bitmap, 0, y0, bitmap.width, y1 - y0))
+        }
+    }
+    return ketQua
 }

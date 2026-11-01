@@ -576,24 +576,25 @@ fun OnTuDoScreen(
     prefs: LocalPrefs,
     onBack: () -> Unit,
 ) {
-    // Ôn tập lấy câu từ 2 nguồn: ngân hàng trong app + câu trắc nghiệm ảnh
-    // đã duyệt của cô dạy lớp học sinh đang tham gia. Học sinh chưa tham
-    // gia lớp thì chỉ có câu trong app, vẫn ôn được ngay.
+    // Ôn tập lấy câu từ 3 nguồn: ngân hàng trong app + ngân hàng chung
+    // (ôn ngẫu nhiên theo chủ đề, không phải lục ngân hàng) + câu riêng
+    // cũ của cô dạy lớp học sinh đang tham gia. Học sinh vẫn chỉ làm
+    // bài được giao cho lớp mình, ôn tập này không tính điểm lớp.
     var cauNhap by remember { mutableStateOf<List<ImportedQuestion>>(emptyList()) }
     var anhTheoCau by remember { mutableStateOf<Map<String, String>>(emptyMap()) }
     LaunchedEffect(prefs.maLop) {
-        if (prefs.maLop.isNotBlank()) {
+        val chung = repo.loadCommonQuestions().getOrNull() ?: emptyList()
+        val riengCu = if (prefs.maLop.isNotBlank()) {
             val giaoVienId = repo.layLopTheoMa(prefs.maLop).getOrNull()?.giaoVienId ?: ""
-            if (giaoVienId.isNotBlank()) {
-                repo.loadTeacherQuestions(giaoVienId).onSuccess { danhSach ->
-                    val loc = danhSach.filter { cau ->
-                        cau.dang == "TRAC_NGHIEM_ANH" && cau.trangThai == "DA_DUYET" && cau.dapAnDung != null
-                    }
-                    cauNhap = loc
-                    anhTheoCau = loc.associate { it.id to it.anhBase64 }
-                }
-            }
+            if (giaoVienId.isNotBlank()) repo.loadTeacherQuestions(giaoVienId).getOrNull() ?: emptyList() else emptyList()
+        } else {
+            emptyList()
         }
+        val loc = (chung + riengCu).distinctBy { it.id }.filter { cau ->
+            cau.dang == "TRAC_NGHIEM_ANH" && cau.trangThai == "DA_DUYET" && cau.dapAnDung != null
+        }
+        cauNhap = loc
+        anhTheoCau = loc.associate { it.id to it.anhBase64 }
     }
     val tatCaCau = remember(bank, cauNhap) { bank.cauHoi + cauNhap.map { it.toCauHoi() } }
     var chuDe by remember { mutableStateOf("Tất cả") }

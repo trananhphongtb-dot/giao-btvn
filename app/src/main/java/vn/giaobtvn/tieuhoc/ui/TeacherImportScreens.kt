@@ -45,6 +45,7 @@ import vn.giaobtvn.tieuhoc.data.nenAnhBase64
 import vn.giaobtvn.tieuhoc.data.nhanCanhBao
 import vn.giaobtvn.tieuhoc.data.processImport
 import vn.giaobtvn.tieuhoc.data.tachBitmapDoc
+import vn.giaobtvn.tieuhoc.data.tachBitmapThanhNhieu
 import vn.giaobtvn.tieuhoc.data.taoIdCauNhap
 
 private enum class BuocNhap { CHON_FILE, NHANH, CAT_THU, DUYET, CHON_DAP_AN, XONG }
@@ -62,9 +63,8 @@ fun NhapCauHoiScreen(
     giaoVien: GiaoVienDaDangNhap,
     onXong: () -> Unit,
     onBack: () -> Unit,
-    // True = cô đóng góp cho ngân hàng BTVN (câu chốt có cờ đóng góp),
-    // false = cô tự up câu hỏi dùng riêng. Cả 2 đều đi chung luồng nhập
-    // + duyệt này, chỉ khác cờ nguonDongGop khi lưu.
+    // Tham số cũ giữ lại để không vỡ lời gọi cũ: từ bản ngân hàng chung,
+    // mọi câu chốt đều vào ngân hàng chung, không còn riêng/chung theo cờ.
     dongGop: Boolean = false,
 ) {
     val context = LocalContext.current
@@ -75,6 +75,8 @@ fun NhapCauHoiScreen(
     var mon by remember { mutableStateOf("") }
     var khoi by remember { mutableStateOf("") }
     var chuong by remember { mutableStateOf("") }
+    var baiChung by remember { mutableStateOf("") }
+    var chuyenDeChung by remember { mutableStateOf("") }
     var dang by remember { mutableStateOf(DangBai.TRAC_NGHIEM_ANH) }
     var monDaCo by remember { mutableStateOf<List<String>>(emptyList()) }
     var candidates by remember { mutableStateOf<List<SplitCandidate>>(emptyList()) }
@@ -85,7 +87,7 @@ fun NhapCauHoiScreen(
     var dangLuu by remember { mutableStateOf(false) }
 
     LaunchedEffect(giaoVien.uid) {
-        repo.loadTeacherQuestions(giaoVien.uid)
+        repo.loadCommonQuestions()
             .onSuccess { monDaCo = it.map { cau -> cau.mon }.filter { m -> m.isNotBlank() }.distinct() }
     }
 
@@ -116,7 +118,12 @@ fun NhapCauHoiScreen(
                     // Nhánh Môn/Chương cô chọn ở bước trước làm giá trị
                     // mặc định cho mọi câu; cô sửa từng câu ở màn duyệt.
                     candidates = ketQua.candidates.map { ungVien ->
-                        ungVien.copy(mon = mon.trim(), chuong = chuong.trim())
+                        ungVien.copy(
+                            mon = mon.trim(),
+                            chuong = chuong.trim(),
+                            bai = baiChung.trim(),
+                            chuyenDe = chuyenDeChung.trim(),
+                        )
                     }
                     buoc = BuocNhap.DUYET
                 }
@@ -132,8 +139,9 @@ fun NhapCauHoiScreen(
         loi = ""
         scope.launch {
             // Giá trị lưu là giá trị SAU KHI cô sửa ở màn duyệt (Môn,
-            // Chương, tag, mức độ của từng câu), không phải gợi ý thô.
-            // Bài để null: bản sửa 11:17 tạm thời chỉ phân nhánh Môn/Chương.
+            // Chương, Bài, Chuyên đề, tag, mức độ của từng câu), không
+            // phải gợi ý thô. Câu lưu vào NGÂN HÀNG CHUNG, giáo viên
+            // khác cũng dùng được, người tạo ghi rõ tên để phân quyền xóa.
             val questions = candidates.mapIndexed { index, ungVien ->
                 ImportedQuestion(
                     id = taoIdCauNhap(),
@@ -141,7 +149,7 @@ fun NhapCauHoiScreen(
                     mon = ungVien.mon.ifBlank { mon.trim() },
                     khoi = khoi.trim(),
                     chuong = ungVien.chuong.ifBlank { chuong.trim() },
-                    bai = null,
+                    bai = ungVien.bai.ifBlank { baiChung.trim() }.takeIf { it.isNotBlank() },
                     dang = dang.name,
                     anhBase64 = ungVien.anhBase64,
                     textGoc = ungVien.textGoc,
@@ -153,12 +161,14 @@ fun NhapCauHoiScreen(
                     soLanGiao = 0,
                     doTinCay = ungVien.doTinCay,
                     tags = ungVien.tags,
-                    nguonDongGop = if (dongGop) giaoVien.uid else "",
+                    nguonDongGop = giaoVien.uid,
+                    chuyenDe = ungVien.chuyenDe.ifBlank { chuyenDeChung.trim() },
+                    giaoVienTen = giaoVien.ten,
                 )
             }
-            repo.saveTeacherQuestions(giaoVien.uid, questions)
+            repo.saveCommonQuestions(questions)
                 .onSuccess {
-                    thongBao = "Đã lưu ${questions.size} câu vào ngân hàng của cô"
+                    thongBao = "Đã lưu ${questions.size} câu vào ngân hàng BTVN chung, giáo viên khác cũng dùng được"
                     buoc = BuocNhap.XONG
                 }
                 .onFailure { loi = "Không lưu được, kiểm tra mạng rồi thử lại" }
@@ -172,13 +182,15 @@ fun NhapCauHoiScreen(
                 TieuDeManHinh(
                     if (dongGop) "Đóng góp cho ngân hàng BTVN" else "Tự up câu hỏi",
                     "Chọn file ảnh, PDF hoặc DOCX. Máy sẽ cắt thử thành từng câu, " +
-                        "cô duyệt (sửa Môn/Chương, tag, mức độ) rồi mới lưu.",
+                        "cô duyệt (sửa Môn/Chương/Bài/Chuyên đề, tag, mức độ) rồi mới lưu.",
                 )
                 NutLon("Chọn file ảnh, PDF hoặc DOCX") { chonFile.launch("*/*") }
                 Text(
                     "Mẹo: file PDF hoặc DOCX có chữ sẵn thì máy cắt chính xác nhất. " +
                         "Ảnh chụp đề hoặc PDF scan thì máy dùng nhận diện chữ để cắt, " +
-                        "cô cần kiểm tra lại ở màn duyệt.",
+                        "cô cần kiểm tra lại ở màn duyệt. Máy không cắt được thì " +
+                        "cô vẫn tách tay ở màn duyệt: nhập số câu trong ảnh, máy " +
+                        "chia đều thành từng câu.",
                     fontSize = 14.sp,
                     color = Color.Gray,
                 )
@@ -186,7 +198,7 @@ fun NhapCauHoiScreen(
             BuocNhap.NHANH -> {
                 TieuDeManHinh(
                     "Chọn nhánh cho bài này",
-                    "Tạm thời chỉ phân nhánh theo Môn/Chương, không chia đến Bài. " +
+                    "Ngân hàng chung phân theo Môn, Lớp, Chương, Bài và Chuyên đề. " +
                         "Nhánh này làm giá trị mặc định cho mọi câu, cô sửa từng câu ở màn duyệt.",
                 )
                 OutlinedTextField(mon, { mon = it }, label = { Text("Môn, ví dụ: Toán") }, modifier = Modifier.fillMaxWidth())
@@ -204,6 +216,10 @@ fun NhapCauHoiScreen(
                 }
                 Spacer(Modifier.height(8.dp))
                 OutlinedTextField(chuong, { chuong = it }, label = { Text("Chương, ví dụ: Chương Đường tròn") }, modifier = Modifier.fillMaxWidth())
+                Spacer(Modifier.height(8.dp))
+                OutlinedTextField(baiChung, { baiChung = it }, label = { Text("Bài, không bắt buộc, ví dụ: Đường tròn trong mặt phẳng tọa độ") }, modifier = Modifier.fillMaxWidth())
+                Spacer(Modifier.height(8.dp))
+                OutlinedTextField(chuyenDeChung, { chuyenDeChung = it }, label = { Text("Chuyên đề, không bắt buộc, ví dụ: Đường tròn") }, modifier = Modifier.fillMaxWidth())
                 Spacer(Modifier.height(8.dp))
                 OutlinedTextField(khoi, { khoi = it }, label = { Text("Khối lớp, không bắt buộc, ví dụ: Lớp 4") }, modifier = Modifier.fillMaxWidth())
                 Spacer(Modifier.height(12.dp))
@@ -224,7 +240,7 @@ fun NhapCauHoiScreen(
                     daCat = false
                     buoc = BuocNhap.CAT_THU
                 }
-                Text("Cần nhập Môn và Chương mới cắt được. Bài không bắt buộc ở bản này.", fontSize = 14.sp, color = Color.Gray)
+                Text("Cần nhập Môn và Chương mới cắt được. Bài và Chuyên đề không bắt buộc, nhưng càng ghi đủ thì giáo viên khác càng dễ tìm trong ngân hàng chung.", fontSize = 14.sp, color = Color.Gray)
             }
             BuocNhap.CAT_THU -> {
                 TieuDeManHinh("Đang cắt thử...", "Máy đang tách file thành từng câu, cô chờ một chút")
@@ -319,6 +335,7 @@ private fun DuyetCauScreen(
     onChot: () -> Unit,
 ) {
     var viTriCat by remember { mutableStateOf<Map<Int, Float>>(emptyMap()) }
+    var soCauTay by remember { mutableStateOf<Map<Int, String>>(emptyMap()) }
 
     // Sửa từng câu trực tiếp trên ứng viên: cập nhật là đổi luôn danh
     // sách, nên thao tác Gộp/Tách về sau vẫn giữ đúng giá trị cô đã sửa.
@@ -329,7 +346,7 @@ private fun DuyetCauScreen(
     }
     TieuDeManHinh(
         "Duyệt câu đã cắt",
-        "Máy cắt thử được ${candidates.size} câu. Cô kiểm tra, sửa Môn/Chương, " +
+        "Máy cắt thử được ${candidates.size} câu. Cô kiểm tra, sửa Môn/Chương/Bài/Chuyên đề, " +
             "tag và mức độ từng câu, gộp/tách/xóa rồi bấm Chốt. Không câu nào " +
             "vào ngân hàng khi chưa qua màn này.",
     )
@@ -362,7 +379,7 @@ private fun DuyetCauScreen(
                 if (ungVien.textGoc != null) {
                     Text(ungVien.textGoc, fontSize = 14.sp, color = Color.DarkGray)
                 }
-                // Cô sửa Môn/Chương, tag và mức độ của từng câu ngay tại đây.
+                // Cô sửa Môn/Chương/Bài/Chuyên đề, tag và mức độ của từng câu ngay tại đây.
                 // Tag và mức độ ban đầu là gợi ý từ máy (câu có text mới có
                 // gợi ý, câu cắt từ ảnh thì cô tự gắn), giá trị sau khi sửa
                 // mới là giá trị lưu vào ngân hàng khi bấm Chốt.
@@ -378,6 +395,20 @@ private fun DuyetCauScreen(
                     ungVien.chuong,
                     { capNhat(index, ungVien.copy(chuong = it)) },
                     label = { Text("Chương của câu này") },
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                Spacer(Modifier.height(8.dp))
+                OutlinedTextField(
+                    ungVien.bai,
+                    { capNhat(index, ungVien.copy(bai = it)) },
+                    label = { Text("Bài của câu này") },
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                Spacer(Modifier.height(8.dp))
+                OutlinedTextField(
+                    ungVien.chuyenDe,
+                    { capNhat(index, ungVien.copy(chuyenDe = it)) },
+                    label = { Text("Chuyên đề của câu này") },
                     modifier = Modifier.fillMaxWidth(),
                 )
                 Spacer(Modifier.height(8.dp))
@@ -415,6 +446,46 @@ private fun DuyetCauScreen(
                     valueRange = 0.1f..0.9f,
                     modifier = Modifier.fillMaxWidth(),
                 )
+                // Tách tay khi máy không cắt được: cô đếm số câu trong
+                // ảnh này rồi nhập N, máy chia đều ảnh thành N mảnh.
+                // Dùng cho ảnh chụp nghiêng, đề chỉ đánh số, công thức
+                // toán mà OCR đọc kém — không cần kéo pixel chính xác.
+                Text(
+                    "Máy không cắt được ảnh này? Nhập số câu trong ảnh rồi bấm Tách tay.",
+                    fontSize = 14.sp,
+                    color = Color.DarkGray,
+                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    OutlinedTextField(
+                        soCauTay[index] ?: "",
+                        { soCauTay = soCauTay + (index to it.filter { c -> c.isDigit() }) },
+                        label = { Text("Số câu trong ảnh") },
+                        modifier = Modifier.weight(1f),
+                    )
+                    NutNho("Tách tay") {
+                        val n = (soCauTay[index] ?: "").toIntOrNull() ?: return@NutNho
+                        if (n < 2) return@NutNho
+                        val goc = giaiMaBase64ThanhBitmap(ungVien.anhBase64) ?: return@NutNho
+                        val manh = tachBitmapThanhNhieu(goc, n)
+                        if (manh.size < 2) return@NutNho
+                        val moi = candidates.toMutableList()
+                        moi[index] = ungVien.copy(anhBase64 = nenAnhBase64(manh[0]))
+                        for (i in 1 until manh.size) {
+                            moi.add(
+                                index + i,
+                                ungVien.copy(
+                                    anhBase64 = nenAnhBase64(manh[i]),
+                                    textGoc = null,
+                                    soCauDuDoan = 0,
+                                    canhBao = listOf("CAN_KIEM_TRA"),
+                                    tags = emptyList(),
+                                    doKhoGoiY = null,
+                                ),
+                            )
+                        }
+                        onDoiCandidates(moi)
+                    }
+                }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     NutNho("Gộp sau", bat = index < candidates.size - 1) {
                         val tren = giaiMaBase64ThanhBitmap(ungVien.anhBase64) ?: return@NutNho
@@ -493,8 +564,11 @@ private fun DuyetCauScreen(
         NutLon("Chốt ${candidates.size} câu này", bat = candidates.isNotEmpty(), onClick = onChot)
         Text(
             "Lưu ý: câu tràn sang trang sau ở bản này chưa tự gộp hoàn hảo, " +
-                "cô dùng nút Gộp với câu sau để gộp tay. Kéo chỉnh pixel chính " +
-                "xác chưa làm ở bản này, chỉ có thanh trượt vị trí tách.",
+                "cô dùng nút Gộp với câu sau để gộp tay. Nếu máy không nhận " +
+                "được đầu câu nào, cô dùng Tách tay ở từng ảnh: nhập số câu " +
+                "trong ảnh, máy chia đều thành từng câu. Câu lưu dạng ảnh " +
+                "nên công thức toán trong ảnh vẫn hiển thị đúng như bản gốc " +
+                "cho học sinh, dù máy không đọc được công thức thành chữ.",
             fontSize = 14.sp,
             color = Color.Gray,
         )
