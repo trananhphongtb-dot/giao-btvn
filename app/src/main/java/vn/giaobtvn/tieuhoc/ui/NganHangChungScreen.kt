@@ -77,8 +77,8 @@ fun NganHangChungScreen(
                 cau.tags.any { tag -> tag.contains(tuKhoa, ignoreCase = true) })
     }
 
-    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp)) {
-        TieuDeManHinh(
+    CanhDoc {
+        TieuDeCanh(
             "Ngân hàng BTVN chung",
             "Câu giáo viên nào tạo rồi thì giáo viên khác cũng dùng được. " +
                 "Tìm theo Môn, Lớp, Bài, Chuyên đề, rồi về màn giao bài để chọn câu.",

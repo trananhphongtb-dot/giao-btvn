@@ -5,6 +5,13 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.messaging.FirebaseMessaging
+import java.util.concurrent.TimeUnit
+import vn.giaobtvn.tieuhoc.service.ThongBaoWorker
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -63,6 +70,25 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         val prefs = LocalPrefs(this)
         val repo = FirebaseRepository()
+        // Kiểm tra hộp thư định kỳ khi app đóng (tối đa 15 phút/lần
+        // theo giới hạn Android) + lưu FCM token để gửi đẩy được.
+        try {
+            val yeuCau = PeriodicWorkRequestBuilder<ThongBaoWorker>(15, TimeUnit.MINUTES).build()
+            WorkManager.getInstance(this).enqueueUniquePeriodicWork(
+                "kiem_tra_thong_bao", ExistingPeriodicWorkPolicy.KEEP, yeuCau,
+            )
+        } catch (e: Exception) {
+            // WorkManager lỗi thì app vẫn chạy bình thường, chỉ mất kiểm tra định kỳ.
+        }
+        try {
+            FirebaseMessaging.getInstance().token.addOnSuccessListener { token ->
+                val root = FirebaseDatabase.getInstance().reference
+                if (prefs.hocSinhId.isNotBlank()) {
+                    root.child("fcmTokens").child(prefs.hocSinhId).setValue(token)
+                }
+            }
+        } catch (e: Exception) {
+        }
 
         setContent {
             GiaoBtvnTheme {

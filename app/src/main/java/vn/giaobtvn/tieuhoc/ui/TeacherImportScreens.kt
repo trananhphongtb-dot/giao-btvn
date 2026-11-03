@@ -176,10 +176,10 @@ fun NhapCauHoiScreen(
         }
     }
 
-    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp)) {
+    CanhDoc {
         when (buoc) {
             BuocNhap.CHON_FILE -> {
-                TieuDeManHinh(
+                TieuDeCanh(
                     if (dongGop) "Đóng góp cho ngân hàng BTVN" else "Tự up câu hỏi",
                     "Chọn file ảnh, PDF hoặc DOCX. Máy sẽ cắt thử thành từng câu, " +
                         "cô duyệt (sửa Môn/Chương/Bài/Chuyên đề, tag, mức độ) rồi mới lưu.",
@@ -196,7 +196,7 @@ fun NhapCauHoiScreen(
                 )
             }
             BuocNhap.NHANH -> {
-                TieuDeManHinh(
+                TieuDeCanh(
                     "Chọn nhánh cho bài này",
                     "Ngân hàng chung phân theo Môn, Lớp, Chương, Bài và Chuyên đề. " +
                         "Nhánh này làm giá trị mặc định cho mọi câu, cô sửa từng câu ở màn duyệt.",
@@ -243,7 +243,7 @@ fun NhapCauHoiScreen(
                 Text("Cần nhập Môn và Chương mới cắt được. Bài và Chuyên đề không bắt buộc, nhưng càng ghi đủ thì giáo viên khác càng dễ tìm trong ngân hàng chung.", fontSize = 14.sp, color = Color.Gray)
             }
             BuocNhap.CAT_THU -> {
-                TieuDeManHinh("Đang cắt thử...", "Máy đang tách file thành từng câu, cô chờ một chút")
+                TieuDeCanh("Đang cắt thử...", "Máy đang tách file thành từng câu, cô chờ một chút")
                 Text("Nếu file dài hoặc ảnh mờ thì bước này có thể lâu hơn bình thường.")
             }
             BuocNhap.DUYET -> {
@@ -260,7 +260,7 @@ fun NhapCauHoiScreen(
                 )
             }
             BuocNhap.CHON_DAP_AN -> {
-                TieuDeManHinh("Chọn đáp án đúng", "Bắt buộc chọn đủ đáp án cho mọi câu mới lưu được")
+                TieuDeCanh("Chọn đáp án đúng", "Bắt buộc chọn đủ đáp án cho mọi câu mới lưu được")
                 candidates.forEachIndexed { index, ungVien ->
                     Column(Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
                         Text("Câu ${index + 1}:", fontSize = 17.sp, fontWeight = FontWeight.Bold)
@@ -300,7 +300,7 @@ fun NhapCauHoiScreen(
                 NutPhu("Quay lại màn duyệt") { buoc = BuocNhap.DUYET }
             }
             BuocNhap.XONG -> {
-                TieuDeManHinh("Đã lưu xong!", thongBao)
+                TieuDeCanh("Đã lưu xong!", thongBao)
                 Text(
                     if (dongGop) {
                         "Các câu này đã vào ngân hàng BTVN với cờ đóng góp của cô, " +
@@ -344,7 +344,7 @@ private fun DuyetCauScreen(
         danhSach[chiSo] = moi
         onDoiCandidates(danhSach)
     }
-    TieuDeManHinh(
+    TieuDeCanh(
         "Duyệt câu đã cắt",
         "Máy cắt thử được ${candidates.size} câu. Cô kiểm tra, sửa Môn/Chương/Bài/Chuyên đề, " +
             "tag và mức độ từng câu, gộp/tách/xóa rồi bấm Chốt. Không câu nào " +

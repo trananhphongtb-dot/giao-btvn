@@ -79,6 +79,9 @@ dependencies {
     implementation(platform("com.google.firebase:firebase-bom:34.0.0"))
     implementation("com.google.firebase:firebase-auth")
     implementation("com.google.firebase:firebase-database")
+    // Thông báo đẩy FCM (kể cả khi app đóng) + kiểm tra hộp thư định kỳ.
+    implementation("com.google.firebase:firebase-messaging")
+    implementation("androidx.work:work-runtime-ktx:2.9.0")
 
     // Đăng nhập Google qua Credential Manager, theo mẫu quoc-te-app.
     implementation("androidx.credentials:credentials:1.5.0")

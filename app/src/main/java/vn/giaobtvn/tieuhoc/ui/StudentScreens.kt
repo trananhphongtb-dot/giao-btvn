@@ -84,6 +84,19 @@ fun StudentHomeScreen(
     // (hocSinhId) như trước, không thay đổi danh sách lớp.
     var taiKhoanGoogle by remember { mutableStateOf(DangNhapGoogle.giaoVienHienTai()) }
     var dangDangNhapGoogle by remember { mutableStateOf(false) }
+    var thongBaoList by remember { mutableStateOf<List<vn.giaobtvn.tieuhoc.data.ThongBaoApp>>(emptyList()) }
+    val contextThongBao = LocalContext.current
+    val xinQuyenThongBao = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission(),
+    ) { _ -> }
+    LaunchedEffect(prefs.hocSinhId) {
+        repo.layThongBao(prefs.hocSinhId).onSuccess { thongBaoList = it }
+    }
+    fun taiThongBao() {
+        scope.launch {
+            repo.layThongBao(prefs.hocSinhId).onSuccess { thongBaoList = it }
+        }
+    }
 
     LaunchedEffect(prefs.maLop) {
         if (prefs.maLop.isNotBlank()) {
@@ -91,8 +104,46 @@ fun StudentHomeScreen(
         }
     }
 
-    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp)) {
-        TieuDeManHinh("Học sinh", "Tham gia lớp để làm bài cô giao, hoặc ôn bài tự do")
+    CanhDoc {
+        TieuDeCanh("Học sinh", "Tham gia lớp để làm bài cô giao, hoặc ôn bài tự do")
+        // Hộp thông báo: bài mới + nhắc làm bài, kể cả khi app vừa mở lại.
+        val chuaDoc = thongBaoList.count { !it.daDoc }
+        Khung("🔔 Thông báo", if (chuaDoc > 0) "$chuaDoc thông báo chưa đọc" else "Không có thông báo mới") {
+            if (thongBaoList.isEmpty()) {
+                Text("Cô chưa gửi thông báo nào cho bạn.", fontSize = 15.sp)
+            } else {
+                thongBaoList.take(5).forEach { tb ->
+                    Column(Modifier.fillMaxWidth().padding(vertical = 6.dp)) {
+                        Text(tb.tieuDe, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                        Text(tb.noiDung, fontSize = 14.sp, color = Color.DarkGray)
+                        Text(
+                            vn.giaobtvn.tieuhoc.data.dinhDangThoiGianThongBao(tb.thoiGian) +
+                                if (tb.daDoc) "" else " — Chưa đọc",
+                            fontSize = 13.sp, color = Color.Gray,
+                        )
+                        if (!tb.daDoc) {
+                            NutNhoQuanLy("Đánh dấu đã đọc") {
+                                scope.launch {
+                                    repo.danhDauDaDocThongBao(prefs.hocSinhId, tb.id)
+                                    taiThongBao()
+                                }
+                            }
+                        }
+                    }
+                }
+                NutNhoQuanLy("Tải lại thông báo") { taiThongBao() }
+            }
+            Spacer(Modifier.height(8.dp))
+            NutPhu("Bật thông báo đẩy") {
+                if (android.os.Build.VERSION.SDK_INT >= 33) {
+                    xinQuyenThongBao.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+                }
+            }
+            Text(
+                "Bật quyền này thì thông báo mới sẽ hiện cả khi app đã đóng.",
+                fontSize = 13.sp, color = Color.Gray,
+            )
+        }
         val taiKhoanHienTai = taiKhoanGoogle
         if (taiKhoanHienTai == null) {
             Text(
@@ -211,8 +262,8 @@ fun DanhSachBaiGiaoScreen(
             .onFailure { loi = "Không tải được bài giao, kiểm tra mạng rồi thử lại" }
     }
 
-    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp)) {
-        TieuDeManHinh("Bài cô giao")
+    CanhDoc {
+        TieuDeCanh("Bài cô giao")
         if (baiList.isEmpty()) {
             Text("Cô chưa giao bài nào cho lớp của bạn.")
         } else {
@@ -320,8 +371,8 @@ fun LamTracNghiemScreen(
         }
     }
 
-    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp)) {
-        TieuDeManHinh(baiGiao.tieuDe, "Trắc nghiệm — ${baiGiao.thoiGianPhut} phút — chỉ làm 1 lượt")
+    CanhDoc {
+        TieuDeCanh(baiGiao.tieuDe, "Trắc nghiệm — ${baiGiao.thoiGianPhut} phút — chỉ làm 1 lượt")
         val cu = baiCu
         val diemKetQua = ketQua
         when {
@@ -454,8 +505,8 @@ fun NopBaiGiayScreen(
     val cu = baiCu
     val duocNopLai = cu == null || cu.trangThai == "YEU_CAU_NOP_LAI"
 
-    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp)) {
-        TieuDeManHinh(baiGiao.tieuDe, "Bài giấy — Hạn nộp: ${dinhDangNgayGio(baiGiao.hanNop)}")
+    CanhDoc {
+        TieuDeCanh(baiGiao.tieuDe, "Bài giấy — Hạn nộp: ${dinhDangNgayGio(baiGiao.hanNop)}")
         if (baiGiao.noiDung.isNotBlank()) {
             Text(baiGiao.noiDung, fontSize = 17.sp)
             Spacer(Modifier.height(8.dp))
@@ -628,8 +679,8 @@ fun OnTuDoScreen(
             (chuong == "Tất cả" || cau.chuong == chuong) &&
             (bai == "Tất cả" || cau.bai == bai)
     }
-    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp)) {
-        TieuDeManHinh(
+    CanhDoc {
+        TieuDeCanh(
             "Ôn bài tự do",
             "Chọn Môn/Chương, hệ thống lấy ngẫu nhiên câu hỏi trong app và " +
                 "câu đã duyệt của cô (nếu bạn đã tham gia lớp).",
@@ -705,8 +756,8 @@ private fun OnTuDoLamScreen(
     var daXong by remember { mutableStateOf(false) }
 
     if (daXong) {
-        Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp)) {
-            TieuDeManHinh("Luyện xong!", "Bạn làm đúng $soDung / ${cauHoi.size} câu")
+        CanhDoc {
+            TieuDeCanh("Luyện xong!", "Bạn làm đúng $soDung / ${cauHoi.size} câu")
             Spacer(Modifier.height(16.dp))
             NutLon("Luyện lại lượt khác", onClick = onLuyenLai)
             Spacer(Modifier.height(8.dp))
@@ -714,9 +765,9 @@ private fun OnTuDoLamScreen(
         }
         return
     }
-    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp)) {
+    CanhDoc {
         val cau = cauHoi[chiSo]
-        TieuDeManHinh("Ôn bài tự do", "Câu ${chiSo + 1} / ${cauHoi.size}")
+        TieuDeCanh("Ôn bài tự do", "Câu ${chiSo + 1} / ${cauHoi.size}")
         Text(cau.noiDung, fontSize = 18.sp)
         val anhCau = anhTheoCau[cau.id]
         if (anhCau != null) {

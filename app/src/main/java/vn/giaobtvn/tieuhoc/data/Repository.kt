@@ -163,6 +163,17 @@ interface GiaoBtvnRepository {
     suspend fun saveCommonQuestions(questions: List<ImportedQuestion>): Result<Unit>
     suspend fun loadCommonQuestions(): Result<List<ImportedQuestion>>
     suspend fun deleteCommonQuestion(questionId: String, giaoVienId: String): Result<Unit>
+
+    /**
+     * THÔNG BÁO (mới 2026-11-04): hộp thư theo từng học sinh, dùng cho
+     * cả bài mới và nhắc làm bài. Giáo viên chỉ gửi nhắc cho những em
+     * mình đã chọn (thường là những em chưa làm), không gửi cả lớp
+     * chung chung nếu cô không chọn cả lớp.
+     */
+    suspend fun guiThongBaoChoHocSinh(danhSachHocSinhId: List<String>, thongBao: ThongBaoApp): Result<Unit>
+    suspend fun layThongBao(hocSinhId: String): Result<List<ThongBaoApp>>
+    suspend fun danhDauDaDocThongBao(hocSinhId: String, thongBaoId: String): Result<Unit>
+    suspend fun luuFcmToken(nguoiDungId: String, token: String): Result<Unit>
 }
 
 class FirebaseRepository : GiaoBtvnRepository {
@@ -172,6 +183,8 @@ class FirebaseRepository : GiaoBtvnRepository {
     private val submissionsRef get() = root.child("submissions")
     private val teacherQuestionsRef get() = root.child("teacherQuestions")
     private val commonQuestionsRef get() = root.child("nganHangChung")
+    private val thongBaoRef get() = root.child("thongBao")
+    private val fcmTokensRef get() = root.child("fcmTokens")
     // Danh sách lớp theo tài khoản: teacherClasses/{uid}/{maLop} = true.
     // Trang chính đọc thẳng danh sách này, không phụ thuộc vào truy vấn
     // tìm kiếm theo giaoVienId vốn là chỗ dễ làm lớp vừa tạo không hiện.
@@ -267,7 +280,68 @@ class FirebaseRepository : GiaoBtvnRepository {
             val id = assignmentsRef.child(maLop).push().key ?: throw Exception("Không tạo được mã bài giao")
             val bai = baiGiao.copy(id = id)
             assignmentsRef.child(maLop).child(id).setValue(bai.toMap()).await()
+            // Thông báo bài mới cho mọi học sinh trong lớp. Ghi hộp thư
+            // là bước phụ: lỗi ở đây không được làm hỏng việc giao bài.
+            try {
+                val lopSnap = classesRef.child(maLop).get().await()
+                val lop = docLop(lopSnap)
+                val thongBao = ThongBaoApp(
+                    tieuDe = "Bài mới: ${bai.tieuDe}",
+                    noiDung = "Cô vừa giao bài \"${bai.tieuDe}\". Hạn nộp: ${dinhDangNgayGio(bai.hanNop)}.",
+                    loai = "BAI_MOI",
+                    maLop = maLop,
+                    baiGiaoId = id,
+                    baiTieuDe = bai.tieuDe,
+                    thoiGian = System.currentTimeMillis(),
+                    daDoc = false,
+                )
+                lop?.hocSinh?.keys?.forEach { hocSinhId ->
+                    val key = thongBaoRef.child(hocSinhId).push().key ?: return@forEach
+                    thongBaoRef.child(hocSinhId).child(key).setValue(thongBao.toMap()).await()
+                }
+            } catch (e: Exception) {
+                // Bỏ qua lỗi thông báo, bài đã giao thành công ở trên.
+            }
             bai
+        }
+
+    override suspend fun guiThongBaoChoHocSinh(danhSachHocSinhId: List<String>, thongBao: ThongBaoApp): Result<Unit> =
+        anToan {
+            danhSachHocSinhId.forEach { hocSinhId ->
+                val key = thongBaoRef.child(hocSinhId).push().key ?: return@forEach
+                thongBaoRef.child(hocSinhId).child(key).setValue(thongBao.toMap()).await()
+            }
+        }
+
+    override suspend fun layThongBao(hocSinhId: String): Result<List<ThongBaoApp>> =
+        anToan {
+            val snap = thongBaoRef.child(hocSinhId).get().await()
+            snap.children.mapNotNull { child ->
+                val id = child.key ?: return@mapNotNull null
+                ThongBaoApp(
+                    id = id,
+                    tieuDe = snapString(child, "tieuDe"),
+                    noiDung = snapString(child, "noiDung"),
+                    loai = snapString(child, "loai").ifBlank { "BAI_MOI" },
+                    maLop = snapString(child, "maLop"),
+                    baiGiaoId = snapString(child, "baiGiaoId"),
+                    baiTieuDe = snapString(child, "baiTieuDe"),
+                    thoiGian = snapLong(child, "thoiGian"),
+                    daDoc = snapBool(child, "daDoc"),
+                )
+            }.sortedByDescending { it.thoiGian }
+        }
+
+    override suspend fun danhDauDaDocThongBao(hocSinhId: String, thongBaoId: String): Result<Unit> =
+        anToan {
+            thongBaoRef.child(hocSinhId).child(thongBaoId).child("daDoc").setValue(true).await()
+        }
+
+    override suspend fun luuFcmToken(nguoiDungId: String, token: String): Result<Unit> =
+        anToan {
+            if (nguoiDungId.isNotBlank() && token.isNotBlank()) {
+                fcmTokensRef.child(nguoiDungId).setValue(token).await()
+            }
         }
 
     override suspend fun layBaiGiaoTheoLop(maLop: String): Result<List<BaiGiao>> =

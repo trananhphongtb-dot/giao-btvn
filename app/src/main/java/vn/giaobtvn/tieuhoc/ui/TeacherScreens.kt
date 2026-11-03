@@ -216,8 +216,8 @@ fun TeacherHomeScreen(
         giaoVien?.let { taiLop(it) }
     }
 
-    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp)) {
-        TieuDeManHinh("Giáo viên", "Tạo lớp, giao bài, chấm bài và xem thống kê")
+    CanhDoc {
+        TieuDeCanh("Giáo viên", "Tạo lớp, giao bài, chấm bài và xem thống kê")
         val gv = giaoVien
         if (gv == null) {
             Text("Giáo viên cần đăng nhập Google để quản lý lớp của mình.", fontSize = 16.sp)
@@ -396,8 +396,8 @@ fun TaoLopScreen(
     var dangTao by remember { mutableStateOf(false) }
     var daSaoChep by remember { mutableStateOf(false) }
 
-    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp)) {
-        TieuDeManHinh("Tạo lớp mới")
+    CanhDoc {
+        TieuDeCanh("Tạo lớp mới")
         OutlinedTextField(
             value = tenLop,
             onValueChange = { tenLop = it },
@@ -441,6 +441,7 @@ fun TaoLopScreen(
     }
 }
 
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
 fun LopDetailScreen(
     repo: GiaoBtvnRepository,
@@ -454,8 +455,16 @@ fun LopDetailScreen(
     val context = LocalContext.current
     var lop by remember { mutableStateOf<LopHoc?>(null) }
     var baiList by remember { mutableStateOf<List<BaiGiao>>(emptyList()) }
+    var nopTheoBai by remember { mutableStateOf<Map<String, Map<String, BaiNop>>>(emptyMap()) }
     var loi by remember { mutableStateOf("") }
+    var thongBao by remember { mutableStateOf("") }
     var daSaoChep by remember { mutableStateOf(false) }
+    // Danh sách đang mở sau khi bấm vào một con số thống kê.
+    var baiDangXemKetQua by remember { mutableStateOf<BaiGiao?>(null) }
+    var loaiDanhSach by remember { mutableStateOf("") }
+    // Bài đang mở hộp nhắc học sinh chưa làm.
+    var baiDangNhac by remember { mutableStateOf<BaiGiao?>(null) }
+    var chonNhac by remember { mutableStateOf<Set<String>>(emptySet()) }
 
     fun taiLai() {
         scope.launch {
@@ -463,7 +472,14 @@ fun LopDetailScreen(
                 .onSuccess { lop = it }
                 .onFailure { loi = "Không tải được lớp này" }
             repo.layBaiGiaoTheoLop(maLop)
-                .onSuccess { baiList = it }
+                .onSuccess { list ->
+                    baiList = list
+                    val map = mutableMapOf<String, Map<String, BaiNop>>()
+                    list.forEach { bai ->
+                        repo.layBaiNopTheoBaiGiao(bai.id).onSuccess { map[bai.id] = it }
+                    }
+                    nopTheoBai = map
+                }
                 .onFailure { loi = "Không tải được danh sách bài giao" }
         }
     }
@@ -472,20 +488,17 @@ fun LopDetailScreen(
         taiLai()
     }
 
-    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp)) {
-        val lopHienTai = lop
-        TieuDeManHinh(
+    val lopHienTai = lop
+    val hocSinh = lopHienTai?.hocSinh ?: emptyMap()
+    val bayGio = System.currentTimeMillis()
+
+    CanhDoc {
+        TieuDeCanh(
             lopHienTai?.tenLop ?: "Lớp $maLop",
-            if (lopHienTai != null) "Mã lớp: ${lopHienTai.maLop}" else "",
+            "Mã lớp: $maLop",
         )
-        // Mã lớp luôn hiện ngay sau tên lớp và sao chép được, để cô
-        // không phải quay lại trang chính mới thấy mã.
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                "Mã lớp: $maLop",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-            )
+            Text("Mã lớp: $maLop", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color(0xFF0D47A1))
             Spacer(Modifier.width(12.dp))
             NutNhoQuanLy("Sao chép mã") {
                 saoChepMaLop(context, maLop)
@@ -497,45 +510,215 @@ fun LopDetailScreen(
             Text("Đã sao chép mã $maLop", fontSize = 15.sp, color = Color(0xFF2E7D32))
         }
         Spacer(Modifier.height(12.dp))
-        NutLon("Giao bài giấy (chụp ảnh)", onClick = onTaoBaiGiay)
-        Spacer(Modifier.height(8.dp))
-        NutLon("Giao bài trắc nghiệm", onClick = onTaoTracNghiem)
-        Spacer(Modifier.height(20.dp))
-        Text("Học sinh trong lớp (${lopHienTai?.hocSinh?.size ?: 0}):", fontSize = 17.sp, fontWeight = FontWeight.Bold)
-        Spacer(Modifier.height(8.dp))
-        NutNhoQuanLy("Tải lại danh sách học sinh") { taiLai() }
-        Text(
-            "Học sinh vào lớp sau khi cô mở màn này thì bấm nút trên để " +
-                "danh sách cập nhật, không cần thoát ra vào lại.",
-            fontSize = 14.sp,
-            color = Color.Gray,
-        )
-        Spacer(Modifier.height(8.dp))
-        if (lopHienTai?.hocSinh.isNullOrEmpty()) {
-            Text("Chưa có học sinh nào tham gia. Chia sẻ mã lớp cho các em.")
-        } else {
-            lopHienTai?.hocSinh?.values?.forEach { ten ->
-                Text("• $ten", fontSize = 16.sp)
+        Khung("Giao bài mới") {
+            NutLon("Giao bài giấy (chụp ảnh)", onClick = onTaoBaiGiay)
+            Spacer(Modifier.height(8.dp))
+            NutLon("Giao bài trắc nghiệm", onClick = onTaoTracNghiem)
+        }
+        // 1. DANH SÁCH HỌC SINH — một ô khung duy nhất.
+        Khung("1. Danh sách học sinh", "${hocSinh.size} học sinh đã tham gia") {
+            NutNhoQuanLy("Tải lại danh sách học sinh") { taiLai() }
+            Spacer(Modifier.height(8.dp))
+            if (hocSinh.isEmpty()) {
+                Text("Chưa có học sinh nào tham gia. Chia sẻ mã lớp cho các em.", fontSize = 15.sp)
+            } else {
+                hocSinh.values.sorted().forEach { ten ->
+                    HangKhung(ten, "")
+                }
             }
         }
-        Spacer(Modifier.height(20.dp))
-        Text("Bài đã giao:", fontSize = 17.sp, fontWeight = FontWeight.Bold)
-        Spacer(Modifier.height(8.dp))
-        if (baiList.isEmpty()) {
-            Text("Chưa giao bài nào.")
-        } else {
-            baiList.forEach { bai ->
-                TheThongTin(
-                    tieuDe = bai.tieuDe,
-                    noiDung = (if (bai.loaiEnum == vn.giaobtvn.tieuhoc.data.LoaiBaiGiao.GIAY) "Bài giấy" else "Trắc nghiệm") +
-                        " — Hạn nộp: ${dinhDangNgayGio(bai.hanNop)}",
-                    onClick = { onMoCham(bai) },
-                )
+        // 2. DANH SÁCH BÀI GIAO — một ô khung duy nhất, có màu trạng thái.
+        Khung("2. Danh sách bài giao", "${baiList.size} bài đã giao") {
+            if (baiList.isEmpty()) {
+                Text("Chưa giao bài nào.", fontSize = 15.sp)
+            } else {
+                baiList.forEach { bai ->
+                    val nopMap = nopTheoBai[bai.id] ?: emptyMap()
+                    val thongKe = tinhThongKe(bai, hocSinh, nopMap, emptyMap(), bayGio)
+                    val canKiemTra = nopMap.values.count { it.diem == null && it.trangThai != "YEU_CAU_NOP_LAI" }
+                    val trangThaiBai = when {
+                        canKiemTra > 0 -> TrangThaiBaiGiao.CAN_KIEM_TRA
+                        bayGio > bai.hanNop && thongKe.chuaNop + thongKe.quaHan > 0 -> TrangThaiBaiGiao.QUA_HAN
+                        thongKe.chuaNop > 0 -> TrangThaiBaiGiao.DANG_TIEN_TRINH
+                        else -> TrangThaiBaiGiao.DA_XONG
+                    }
+                    Column(Modifier.fillMaxWidth().padding(vertical = 6.dp)) {
+                        Text(bai.tieuDe, fontSize = 17.sp, fontWeight = FontWeight.Bold)
+                        Text(
+                            (if (bai.loaiEnum == vn.giaobtvn.tieuhoc.data.LoaiBaiGiao.GIAY) "Bài giấy" else "Trắc nghiệm") +
+                                " — Hạn nộp: ${dinhDangNgayGio(bai.hanNop)}",
+                            fontSize = 14.sp, color = Color.DarkGray,
+                        )
+                        Text(
+                            nhanTrangThaiBai(trangThaiBai),
+                            fontSize = 14.sp, fontWeight = FontWeight.Bold,
+                            color = mauTrangThaiBai(trangThaiBai),
+                        )
+                        Spacer(Modifier.height(6.dp))
+                        NutNhoQuanLy("Xem chấm và thống kê") { onMoCham(bai) }
+                    }
+                }
+            }
+        }
+        // 3. KẾT QUẢ TỪNG BÀI — bấm vào số thì ra danh sách tương ứng.
+        Khung("3. Kết quả từng bài", "Bấm vào một con số để xem đúng danh sách đó") {
+            if (baiList.isEmpty()) {
+                Text("Chưa có bài nào để xem kết quả.", fontSize = 15.sp)
+            } else {
+                baiList.forEach { bai ->
+                    val nopMap = nopTheoBai[bai.id] ?: emptyMap()
+                    val thongKe = tinhThongKe(bai, hocSinh, nopMap, emptyMap(), bayGio)
+                    val duoi5 = thongKe.diemTheoHocSinh.values.count { it < 5.0 }
+                    val tu5 = thongKe.diemTheoHocSinh.values.count { it >= 5.0 }
+                    val chuaLam = thongKe.chuaNop + thongKe.quaHan
+                    Column(Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
+                        Text(bai.tieuDe, fontSize = 17.sp, fontWeight = FontWeight.Bold)
+                        Text(
+                            "Hạn nộp: ${dinhDangNgayGio(bai.hanNop)}",
+                            fontSize = 14.sp, color = Color.DarkGray,
+                        )
+                        Spacer(Modifier.height(8.dp))
+                        androidx.compose.foundation.layout.FlowRow(
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            ChipThongKe("Đã làm", thongKe.daNop, Color(0xFF2E7D32)) {
+                                baiDangXemKetQua = bai
+                                loaiDanhSach = "DA_LAM"
+                            }
+                            ChipThongKe("Chưa làm", chuaLam, Color(0xFFD32F2F)) {
+                                baiDangXemKetQua = bai
+                                loaiDanhSach = "CHUA_LAM"
+                            }
+                            ChipThongKe("Dưới 5", duoi5, Color(0xFFE65100)) {
+                                baiDangXemKetQua = bai
+                                loaiDanhSach = "DUOI_5"
+                            }
+                            ChipThongKe("Từ 5 trở lên", tu5, Color(0xFF1565C0)) {
+                                baiDangXemKetQua = bai
+                                loaiDanhSach = "TU_5"
+                            }
+                        }
+                        HangKhung(
+                            "Điểm trung bình",
+                            thongKe.diemTrungBinh?.toString() ?: "Chưa có điểm",
+                        )
+                        Spacer(Modifier.height(6.dp))
+                        NutNhoQuanLy("Nhắc học sinh chưa làm") {
+                            baiDangNhac = bai
+                            chonNhac = emptySet()
+                        }
+                        // Danh sách mở ra ngay dưới bài đó khi cô bấm vào số.
+                        val baiDangXem = baiDangXemKetQua
+                        if (baiDangXem?.id == bai.id && loaiDanhSach.isNotBlank()) {
+                            Spacer(Modifier.height(10.dp))
+                            val danhSachHien: List<Pair<String, Double?>> = when (loaiDanhSach) {
+                                "DA_LAM" -> hocSinh.filter { (id, _) ->
+                                    val nop = nopMap[id]
+                                    nop != null && nop.trangThai != "YEU_CAU_NOP_LAI"
+                                }.map { (id, ten) -> ten to nopMap[id]?.diem }
+                                "CHUA_LAM" -> hocSinh.filter { (id, _) ->
+                                    val nop = nopMap[id]
+                                    nop == null || nop.trangThai == "YEU_CAU_NOP_LAI" ||
+                                        trangThaiCuaHocSinh(nop, bai.hanNop, bayGio) == TrangThaiNop.CHUA_NOP ||
+                                        trangThaiCuaHocSinh(nop, bai.hanNop, bayGio) == TrangThaiNop.QUA_HAN
+                                }.map { (_, ten) -> ten to null }
+                                "DUOI_5" -> thongKe.diemTheoHocSinh.filter { it.value < 5.0 }
+                                    .map { (id, diem) -> (hocSinh[id] ?: id) to diem }
+                                else -> thongKe.diemTheoHocSinh.filter { it.value >= 5.0 }
+                                    .map { (id, diem) -> (hocSinh[id] ?: id) to diem }
+                            }
+                            val tieuDeDanhSach = when (loaiDanhSach) {
+                                "DA_LAM" -> "Danh sách đã làm"
+                                "CHUA_LAM" -> "Danh sách chưa làm"
+                                "DUOI_5" -> "Danh sách dưới 5 điểm"
+                                else -> "Danh sách từ 5 điểm trở lên"
+                            }
+                            Text("$tieuDeDanhSach (${danhSachHien.size}):", fontSize = 15.sp, fontWeight = FontWeight.Bold)
+                            if (danhSachHien.isEmpty()) {
+                                Text("Không có học sinh nào trong nhóm này.", fontSize = 15.sp)
+                            } else {
+                                danhSachHien.forEach { (ten, diem) ->
+                                    HangKhung(ten, if (diem != null) "$diem / 10" else "")
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
         ThongBaoLoi(loi)
+        ThongBaoTot(thongBao)
         Spacer(Modifier.height(16.dp))
         NutPhu("Quay lại", onClick = onBack)
+    }
+
+    // Hộp nhắc: cô chỉ chọn trong những em chưa làm bài đó.
+    val baiNhac = baiDangNhac
+    if (baiNhac != null) {
+        val nopMap = nopTheoBai[baiNhac.id] ?: emptyMap()
+        val chuaLamList = hocSinh.filter { (id, _) ->
+            val nop = nopMap[id]
+            nop == null || nop.trangThai == "YEU_CAU_NOP_LAI" ||
+                trangThaiCuaHocSinh(nop, baiNhac.hanNop, bayGio) == TrangThaiNop.CHUA_NOP ||
+                trangThaiCuaHocSinh(nop, baiNhac.hanNop, bayGio) == TrangThaiNop.QUA_HAN
+        }.toList()
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { baiDangNhac = null },
+            title = { Text("Nhắc học sinh chưa làm") },
+            text = {
+                Column {
+                    Text("Bài: ${baiNhac.tieuDe}", fontWeight = FontWeight.Bold)
+                    Text("Chỉ hiện những em chưa làm bài này. Cô tick chọn em nào thì nhắc đúng em đó.")
+                    Spacer(Modifier.height(8.dp))
+                    if (chuaLamList.isEmpty()) {
+                        Text("Tất cả học sinh đã làm bài này rồi.")
+                    } else {
+                        chuaLamList.forEach { (id, ten) ->
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                androidx.compose.material3.Checkbox(
+                                    checked = id in chonNhac,
+                                    onCheckedChange = { tick ->
+                                        chonNhac = if (tick) chonNhac + id else chonNhac - id
+                                    },
+                                )
+                                Text(ten, fontSize = 16.sp)
+                            }
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                androidx.compose.material3.TextButton(
+                    enabled = chonNhac.isNotEmpty(),
+                    onClick = {
+                        val chon = chonNhac.toList()
+                        scope.launch {
+                            repo.guiThongBaoChoHocSinh(
+                                chon,
+                                vn.giaobtvn.tieuhoc.data.ThongBaoApp(
+                                    tieuDe = "Nhắc làm bài: ${baiNhac.tieuDe}",
+                                    noiDung = "Cô nhắc bạn làm bài \"${baiNhac.tieuDe}\". Hạn nộp: ${dinhDangNgayGio(baiNhac.hanNop)}.",
+                                    loai = "NHAC_LAM_BAI",
+                                    maLop = maLop,
+                                    baiGiaoId = baiNhac.id,
+                                    baiTieuDe = baiNhac.tieuDe,
+                                    thoiGian = System.currentTimeMillis(),
+                                    daDoc = false,
+                                ),
+                            ).onSuccess {
+                                thongBao = "Đã gửi nhắc cho ${chon.size} học sinh"
+                                baiDangNhac = null
+                            }.onFailure {
+                                loi = "Không gửi được nhắc nhở, kiểm tra mạng rồi thử lại"
+                            }
+                        }
+                    },
+                ) { Text("Gửi nhắc (${chonNhac.size})") }
+            },
+            dismissButton = {
+                androidx.compose.material3.TextButton(onClick = { baiDangNhac = null }) { Text("Đóng") }
+            },
+        )
     }
 }
 
@@ -567,8 +750,8 @@ fun TaoBaiGiayScreen(
         }
     }
 
-    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp)) {
-        TieuDeManHinh("Giao bài giấy", "Học sinh làm ra giấy rồi chụp ảnh nộp, tối đa 3 ảnh")
+    CanhDoc {
+        TieuDeCanh("Giao bài giấy", "Học sinh làm ra giấy rồi chụp ảnh nộp, tối đa 3 ảnh")
         OutlinedTextField(tieuDe, { tieuDe = it }, label = { Text("Tiêu đề bài") }, modifier = Modifier.fillMaxWidth())
         Spacer(Modifier.height(8.dp))
         OutlinedTextField(noiDung, { noiDung = it }, label = { Text("Nội dung đề bài") }, modifier = Modifier.fillMaxWidth(), minLines = 3)
@@ -663,8 +846,8 @@ fun TaoTracNghiemScreen(
         )
     }
 
-    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp)) {
-        TieuDeManHinh("Giao bài trắc nghiệm", "Cô chọn tay từng câu hoặc chọn tự động theo mức độ")
+    CanhDoc {
+        TieuDeCanh("Giao bài trắc nghiệm", "Cô chọn tay từng câu hoặc chọn tự động theo mức độ")
         OutlinedTextField(tieuDe, { tieuDe = it }, label = { Text("Tiêu đề bài") }, modifier = Modifier.fillMaxWidth())
         Spacer(Modifier.height(12.dp))
         Text("Chủ đề:", fontWeight = FontWeight.Bold)
@@ -921,8 +1104,8 @@ fun ChamVaThongKeScreen(
     val thongKe = tinhThongKe(baiGiao, hocSinh, baiNopMap, dapAnDung, System.currentTimeMillis())
     val capTrung = timBaiNghiTrung(baiNopMap)
 
-    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp)) {
-        TieuDeManHinh(
+    CanhDoc {
+        TieuDeCanh(
             "Chấm và thống kê",
             "${baiGiao.tieuDe} — Hạn nộp: ${dinhDangNgayGio(baiGiao.hanNop)}",
         )
