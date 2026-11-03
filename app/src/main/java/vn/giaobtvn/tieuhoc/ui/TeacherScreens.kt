@@ -194,11 +194,6 @@ fun TeacherHomeScreen(
     var lopList by remember { mutableStateOf<List<LopHoc>>(emptyList()) }
     var dangTai by remember { mutableStateOf(false) }
     var loi by remember { mutableStateOf("") }
-    // Số lần bấm Tải lại: danh sách lớp trước đây chỉ tải 1 lần khi mở
-    // màn, nên lớp vừa tạo xong mà quay lại trang chính vẫn có thể
-    // thấy danh sách cũ. Bấm Tải lại sẽ tải lại đúng tài khoản đang
-    // đăng nhập, không phụ thuộc vào lần tải đầu tiên.
-    var lamMoi by remember { mutableStateOf(0) }
     var maTim by remember { mutableStateOf("") }
     var hienTimTheoMa by remember { mutableStateOf(false) }
 
@@ -212,7 +207,8 @@ fun TeacherHomeScreen(
             dangTai = false
         }
     }
-    LaunchedEffect(giaoVien?.uid, lamMoi) {
+    // Danh sách tự tải khi mở trang, không cần bấm tải lại.
+    LaunchedEffect(giaoVien?.uid) {
         giaoVien?.let { taiLop(it) }
     }
 
@@ -243,34 +239,14 @@ fun TeacherHomeScreen(
                 Spacer(Modifier.height(8.dp))
                 Text(loi, fontSize = 15.sp, color = Color(0xFFD32F2F), fontWeight = FontWeight.Bold)
             }
-            Spacer(Modifier.height(16.dp))
-            NutLon("Tạo lớp mới", onClick = onTaoLop)
-            Spacer(Modifier.height(8.dp))
-            NutLon("Tự up câu hỏi", onClick = onNhapCauHoi)
-            Text(
-                "Up file ảnh, PDF hoặc DOCX, máy cắt thử thành từng câu, " +
-                    "cô duyệt rồi lưu vào ngân hàng chung, giáo viên khác cũng dùng được.",
-                fontSize = 14.sp,
-                color = Color.Gray,
-            )
-            Spacer(Modifier.height(8.dp))
-            NutLon("Ngân hàng BTVN chung", onClick = onNganHangChung)
-            Text(
-                "Xem và tìm câu giáo viên khác đã tạo theo Môn, Lớp, Bài, " +
-                    "Chuyên đề, rồi dùng để giao bài cho lớp của cô.",
-                fontSize = 14.sp,
-                color = Color.Gray,
-            )
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(12.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                NutNhoQuanLy("Tạo lớp", onClick = onTaoLop)
+                NutNhoQuanLy("Up câu hỏi", onClick = onNhapCauHoi)
+                NutNhoQuanLy("Ngân hàng", onClick = onNganHangChung)
+            }
+            Spacer(Modifier.height(12.dp))
             Text("Các lớp của tôi — quản lý lớp:", fontSize = 17.sp, fontWeight = FontWeight.Bold)
-            Spacer(Modifier.height(8.dp))
-            NutNhoQuanLy("Tải lại danh sách lớp") { lamMoi++ }
-            Text(
-                "Vừa tạo lớp xong mà chưa thấy lớp hiện ra thì bấm nút này, " +
-                    "không cần thoát app hay đăng nhập lại.",
-                fontSize = 14.sp,
-                color = Color.Gray,
-            )
             Spacer(Modifier.height(8.dp))
             if (dangTai) {
                 Text("Đang tải...")
@@ -318,16 +294,19 @@ fun TeacherHomeScreen(
                     }
                 }
             }
-            Spacer(Modifier.height(16.dp))
-            NutPhu("Đăng xuất") {
-                DangNhapGoogle.dangXuat()
-                giaoVien = null
-                lopList = emptyList()
-            }
         }
         ThongBaoLoi(loi)
-        Spacer(Modifier.height(16.dp))
-        NutPhu("Đổi vai", onClick = onDoiVai)
+        Spacer(Modifier.height(12.dp))
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            if (giaoVien != null) {
+                NutNhoQuanLy("Đăng xuất") {
+                    DangNhapGoogle.dangXuat()
+                    giaoVien = null
+                    lopList = emptyList()
+                }
+            }
+            NutNhoQuanLy("Đổi vai", onClick = onDoiVai)
+        }
     }
 }
 
@@ -349,24 +328,23 @@ fun TheQuanLyLop(
         colors = androidx.compose.material3.CardDefaults.cardColors(containerColor = Color.White),
         modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
     ) {
-        Column(Modifier.padding(16.dp)) {
+        Column(Modifier.padding(12.dp)) {
             Text("${lop.tenLop} — Mã: ${lop.maLop}", fontSize = 17.sp, fontWeight = FontWeight.Bold)
-            Spacer(Modifier.height(4.dp))
-            Text("${lop.hocSinh.size} học sinh đã tham gia", fontSize = 15.sp, color = Color.DarkGray)
-            Spacer(Modifier.height(12.dp))
+            Text("${lop.hocSinh.size} học sinh đã tham gia", fontSize = 14.sp, color = Color.DarkGray)
+            Spacer(Modifier.height(8.dp))
+            // 3 nút gọn trong đúng 1 hàng, không dãi thành 2 hàng nữa.
             Row(verticalAlignment = Alignment.CenterVertically) {
-                NutNhoQuanLy("Quản lý lớp", onClick = onQuanLy)
-                NutNhoQuanLy("Sao chép mã") {
+                NutNhoNho("Quản lý", onClick = onQuanLy)
+                NutNhoNho("Sao chép mã") {
                     saoChepMaLop(context, lop.maLop)
                     daSaoChep = true
                 }
+                NutNhoNho("Trắc nghiệm", onClick = onTaoTracNghiem)
             }
             if (daSaoChep) {
                 Spacer(Modifier.height(4.dp))
                 Text("Đã sao chép mã ${lop.maLop}", fontSize = 14.sp, color = Color(0xFF2E7D32))
             }
-            Spacer(Modifier.height(8.dp))
-            NutNhoQuanLy("Giao bài trắc nghiệm", onClick = onTaoTracNghiem)
         }
     }
 }
@@ -378,6 +356,18 @@ fun NutNhoQuanLy(text: String, onClick: () -> Unit) {
         modifier = Modifier.padding(end = 8.dp),
     ) {
         Text(text, fontSize = 14.sp)
+    }
+}
+
+/** Nút nhỏ gọn cho 1 hàng 3 nút: chữ nhỏ, đệm hẹp, không tràn hàng. */
+@Composable
+fun NutNhoNho(text: String, onClick: () -> Unit) {
+    androidx.compose.material3.OutlinedButton(
+        onClick = onClick,
+        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 10.dp, vertical = 0.dp),
+        modifier = Modifier.padding(end = 6.dp).height(36.dp),
+    ) {
+        Text(text, fontSize = 13.sp)
     }
 }
 
@@ -515,10 +505,8 @@ fun LopDetailScreen(
             Spacer(Modifier.height(8.dp))
             NutLon("Giao bài trắc nghiệm", onClick = onTaoTracNghiem)
         }
-        // 1. DANH SÁCH HỌC SINH — một ô khung duy nhất.
+        // 1. DANH SÁCH HỌC SINH — một ô khung duy nhất, tự tải khi mở lớp.
         Khung("1. Danh sách học sinh", "${hocSinh.size} học sinh đã tham gia") {
-            NutNhoQuanLy("Tải lại danh sách học sinh") { taiLai() }
-            Spacer(Modifier.height(8.dp))
             if (hocSinh.isEmpty()) {
                 Text("Chưa có học sinh nào tham gia. Chia sẻ mã lớp cho các em.", fontSize = 15.sp)
             } else {

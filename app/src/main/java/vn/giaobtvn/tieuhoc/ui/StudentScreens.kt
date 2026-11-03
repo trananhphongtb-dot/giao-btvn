@@ -66,7 +66,6 @@ import vn.giaobtvn.tieuhoc.data.tronCauHoiVaDapAn
 
 @Composable
 fun StudentHomeScreen(
-    activity: Activity,
     prefs: LocalPrefs,
     repo: GiaoBtvnRepository,
     onXemBai: () -> Unit,
@@ -79,11 +78,8 @@ fun StudentHomeScreen(
     var lop by remember { mutableStateOf<LopHoc?>(null) }
     var loi by remember { mutableStateOf("") }
     var thongBao by remember { mutableStateOf("") }
-    // Đăng nhập Google cho học sinh là TÙY CHỌN, không bắt buộc: chỉ để
-    // tự điền tên khi tham gia lớp. Bài nộp vẫn tính theo mã máy
-    // (hocSinhId) như trước, không thay đổi danh sách lớp.
-    var taiKhoanGoogle by remember { mutableStateOf(DangNhapGoogle.giaoVienHienTai()) }
-    var dangDangNhapGoogle by remember { mutableStateOf(false) }
+    // Học sinh KHÔNG cần đăng nhập Google nữa (bỏ từ 2026-11-04):
+    // chỉ cần mã lớp + tên, bài nộp tính theo mã máy (hocSinhId).
     var thongBaoList by remember { mutableStateOf<List<vn.giaobtvn.tieuhoc.data.ThongBaoApp>>(emptyList()) }
     val contextThongBao = LocalContext.current
     val xinQuyenThongBao = rememberLauncherForActivityResult(
@@ -143,43 +139,6 @@ fun StudentHomeScreen(
                 "Bật quyền này thì thông báo mới sẽ hiện cả khi app đã đóng.",
                 fontSize = 13.sp, color = Color.Gray,
             )
-        }
-        val taiKhoanHienTai = taiKhoanGoogle
-        if (taiKhoanHienTai == null) {
-            Text(
-                "Có tài khoản Google thì đăng nhập để app tự điền tên cho bạn, không bắt buộc:",
-                fontSize = 15.sp,
-            )
-            Spacer(Modifier.height(8.dp))
-            NutPhu(if (dangDangNhapGoogle) "Đang đăng nhập..." else "Đăng nhập bằng Google") {
-                if (!dangDangNhapGoogle) {
-                    dangDangNhapGoogle = true
-                    loi = ""
-                    scope.launch {
-                        DangNhapGoogle.dangNhap(activity)
-                            .onSuccess { gv ->
-                                taiKhoanGoogle = gv
-                                if (tenNhap.isBlank()) tenNhap = gv.ten
-                                thongBao = "Đã đăng nhập Google: ${gv.ten}"
-                            }
-                            .onFailure { loi = it.message ?: "Đăng nhập không thành công" }
-                        dangDangNhapGoogle = false
-                    }
-                }
-            }
-            Spacer(Modifier.height(8.dp))
-        } else {
-            Text(
-                "Đã đăng nhập Google: ${taiKhoanHienTai.ten}",
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
-            )
-            Spacer(Modifier.height(8.dp))
-            NutPhu("Đăng xuất Google") {
-                DangNhapGoogle.dangXuat()
-                taiKhoanGoogle = null
-            }
-            Spacer(Modifier.height(8.dp))
         }
         val lopHienTai = lop
         if (prefs.maLop.isBlank()) {
