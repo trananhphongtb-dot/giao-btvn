@@ -586,6 +586,12 @@ fun TaoBaiGiayScreen(
                 loi = loiHan
                 return@NutLon
             }
+            // loiHanNop đã chặn hanNop null, nhưng compiler vẫn thấy hanNop là Long?
+            // nên cần chặn null tường minh ở đây thì BaiGiao(hanNop: Long) mới build được.
+            if (hanNop == null) {
+                loi = "Chưa chọn ngày giờ hạn nộp."
+                return@NutLon
+            }
             loi = ""
             scope.launch {
                 repo.taoBaiGiao(
@@ -831,6 +837,12 @@ fun TaoTracNghiemScreen(
             val loiHan = loiHanNop(hanNop)
             if (loiHan != null) {
                 loi = loiHan
+                return@NutLon
+            }
+            // loiHanNop đã chặn hanNop null, nhưng compiler vẫn thấy hanNop là Long?
+            // nên cần chặn null tường minh ở đây thì BaiGiao(hanNop: Long) mới build được.
+            if (hanNop == null) {
+                loi = "Chưa chọn ngày giờ hạn nộp."
                 return@NutLon
             }
             if (phut == null || phut <= 0) {
