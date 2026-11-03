@@ -15,11 +15,35 @@
       },
       "oauth_client": [
         {
+          "client_id": "577528560270-906ptl5mof1cm842ekkd3ottatl5uafe.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "vn.giaobtvn.tieuhoc",
+            "certificate_hash": "9d91892589a3963e754593fea2ffd4065d1604b1"
+          }
+        },
+        {
+          "client_id": "577528560270-9ufvt2h9mh9r32kgjjos0umuqhe01e6r.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "vn.giaobtvn.tieuhoc",
+            "certificate_hash": "e42a18143641b8f340d4dd729a46d18681e0e47a"
+          }
+        },
+        {
           "client_id": "577528560270-d5r81286a5ak99ghdrro3bgr15p49p8i.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "vn.giaobtvn.tieuhoc",
             "certificate_hash": "4516934bd648a0c1eaef73a000a3a21e9ddec29a"
+          }
+        },
+        {
+          "client_id": "577528560270-lfkmjg8qeae99qllhohqj5fnga776o4n.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "vn.giaobtvn.tieuhoc",
+            "certificate_hash": "5b5bcfadee8decbbb05a53fac2c52fdcb375fe9c"
           }
         },
         {
