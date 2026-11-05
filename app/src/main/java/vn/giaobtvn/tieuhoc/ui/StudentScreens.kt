@@ -78,76 +78,28 @@ fun StudentHomeScreen(
     var lop by remember { mutableStateOf<LopHoc?>(null) }
     var loi by remember { mutableStateOf("") }
     var thongBao by remember { mutableStateOf("") }
-    // Học sinh KHÔNG cần đăng nhập Google nữa (bỏ từ 2026-11-04):
-    // chỉ cần mã lớp + tên, bài nộp tính theo mã máy (hocSinhId).
+    var hienThongBao by remember { mutableStateOf(false) }
+    var hienTuyChon by remember { mutableStateOf(false) }
     var thongBaoList by remember { mutableStateOf<List<vn.giaobtvn.tieuhoc.data.ThongBaoApp>>(emptyList()) }
-    val contextThongBao = LocalContext.current
     val xinQuyenThongBao = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission(),
     ) { _ -> }
-    LaunchedEffect(prefs.hocSinhId) {
-        repo.layThongBao(prefs.hocSinhId).onSuccess { thongBaoList = it }
-    }
     fun taiThongBao() {
-        scope.launch {
-            repo.layThongBao(prefs.hocSinhId).onSuccess { thongBaoList = it }
-        }
+        scope.launch { repo.layThongBao(prefs.hocSinhId).onSuccess { thongBaoList = it } }
     }
-
+    LaunchedEffect(prefs.hocSinhId) { taiThongBao() }
     LaunchedEffect(prefs.maLop) {
-        if (prefs.maLop.isNotBlank()) {
-            repo.layLopTheoMa(prefs.maLop).onSuccess { lop = it }
-        }
+        if (prefs.maLop.isNotBlank()) repo.layLopTheoMa(prefs.maLop).onSuccess { lop = it }
     }
-
     CanhDoc {
-        TieuDeCanh("Học sinh", "Tham gia lớp để làm bài cô giao, hoặc ôn bài tự do")
-        // Hộp thông báo: bài mới + nhắc làm bài, kể cả khi app vừa mở lại.
-        val chuaDoc = thongBaoList.count { !it.daDoc }
-        Khung("🔔 Thông báo", if (chuaDoc > 0) "$chuaDoc thông báo chưa đọc" else "Không có thông báo mới") {
-            if (thongBaoList.isEmpty()) {
-                Text("Cô chưa gửi thông báo nào cho bạn.", fontSize = 15.sp)
-            } else {
-                thongBaoList.take(5).forEach { tb ->
-                    Column(Modifier.fillMaxWidth().padding(vertical = 6.dp)) {
-                        Text(tb.tieuDe, fontSize = 16.sp, fontWeight = FontWeight.Bold)
-                        Text(tb.noiDung, fontSize = 14.sp, color = Color.DarkGray)
-                        Text(
-                            vn.giaobtvn.tieuhoc.data.dinhDangThoiGianThongBao(tb.thoiGian) +
-                                if (tb.daDoc) "" else " — Chưa đọc",
-                            fontSize = 13.sp, color = Color.Gray,
-                        )
-                        if (!tb.daDoc) {
-                            NutNhoQuanLy("Đánh dấu đã đọc") {
-                                scope.launch {
-                                    repo.danhDauDaDocThongBao(prefs.hocSinhId, tb.id)
-                                    taiThongBao()
-                                }
-                            }
-                        }
-                    }
-                }
-                NutNhoQuanLy("Tải lại thông báo") { taiThongBao() }
-            }
-            Spacer(Modifier.height(8.dp))
-            NutPhu("Bật thông báo đẩy") {
-                if (android.os.Build.VERSION.SDK_INT >= 33) {
-                    xinQuyenThongBao.launch(android.Manifest.permission.POST_NOTIFICATIONS)
-                }
-            }
-            Text(
-                "Bật quyền này thì thông báo mới sẽ hiện cả khi app đã đóng.",
-                fontSize = 13.sp, color = Color.Gray,
-            )
-        }
-        val lopHienTai = lop
+        TieuDeCanh("Học sinh", if (prefs.tenHocSinh.isNotBlank()) "Chào ${prefs.tenHocSinh}!" else "Học và làm bài mỗi ngày")
         if (prefs.maLop.isBlank()) {
-            Text("Bạn chưa tham gia lớp nào. Nhập mã lớp cô cho để vào lớp:", fontSize = 16.sp)
-            Spacer(Modifier.height(12.dp))
-            OutlinedTextField(maLopNhap, { maLopNhap = it }, label = { Text("Mã lớp, ví dụ: K7X2Q9") }, modifier = Modifier.fillMaxWidth())
+            Text("Nhập mã lớp cô cung cấp để nhận bài tập.", fontSize = 15.sp)
             Spacer(Modifier.height(8.dp))
-            OutlinedTextField(tenNhap, { tenNhap = it }, label = { Text("Tên của bạn") }, modifier = Modifier.fillMaxWidth())
-            Spacer(Modifier.height(12.dp))
+            OutlinedTextField(maLopNhap, { maLopNhap = it }, label = { Text("Mã lớp") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
+            Spacer(Modifier.height(6.dp))
+            OutlinedTextField(tenNhap, { tenNhap = it }, label = { Text("Tên của em") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
+            Spacer(Modifier.height(8.dp))
             NutLon("Tham gia lớp", bat = maLopNhap.isNotBlank() && tenNhap.isNotBlank()) {
                 loi = ""
                 scope.launch {
@@ -158,37 +110,58 @@ fun StudentHomeScreen(
                             lop = it
                             thongBao = "Đã tham gia lớp ${it.tenLop}"
                         }
-                        .onFailure { loi = "Không tìm thấy lớp với mã này, kiểm tra lại mã lớp" }
+                        .onFailure { loi = "Không tìm thấy lớp. Hãy kiểm tra mã lớp." }
                 }
             }
         } else {
-            Text(
-                "Lớp của bạn: ${lopHienTai?.tenLop ?: prefs.maLop} (mã ${prefs.maLop})",
-                fontSize = 17.sp,
-                fontWeight = FontWeight.Bold,
-            )
-            Text("Tên của bạn: ${prefs.tenHocSinh}", fontSize = 16.sp)
-            Spacer(Modifier.height(16.dp))
-            NutLon("Xem bài cô giao", onClick = onXemBai)
-            Spacer(Modifier.height(8.dp))
-            NutPhu("Rời lớp này") {
+            Text("Lớp ${lop?.tenLop ?: prefs.maLop}", fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
+            Spacer(Modifier.height(10.dp))
+            NutLon("📚 Xem bài cô giao", onClick = onXemBai)
+        }
+        Spacer(Modifier.height(8.dp))
+        NutLon("✏️ Ôn bài tự do", onClick = onOnTuDo)
+        Spacer(Modifier.height(12.dp))
+        val chuaDoc = thongBaoList.count { !it.daDoc }
+        androidx.compose.material3.Card(
+            onClick = { hienThongBao = !hienThongBao },
+            colors = androidx.compose.material3.CardDefaults.cardColors(containerColor = Color.White),
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Row(Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text("🔔 Thông báo", fontSize = 16.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+                Text(if (chuaDoc > 0) "$" + "{chuaDoc} chưa đọc" else "Xem thông báo", fontSize = 13.sp, color = Color(0xFF1565C0))
+            }
+        }
+        if (hienThongBao) {
+            if (thongBaoList.isEmpty()) Text("Chưa có thông báo.", fontSize = 14.sp)
+            thongBaoList.take(5).forEach { tb ->
+                Column(Modifier.fillMaxWidth().padding(vertical = 6.dp)) {
+                    Text(tb.tieuDe, fontWeight = FontWeight.SemiBold)
+                    Text(tb.noiDung, fontSize = 14.sp)
+                    if (!tb.daDoc) androidx.compose.material3.TextButton(onClick = {
+                        scope.launch {
+                            repo.danhDauDaDocThongBao(prefs.hocSinhId, tb.id)
+                            taiThongBao()
+                        }
+                    }) { Text("Đánh dấu đã đọc") }
+                }
+            }
+            androidx.compose.material3.TextButton(onClick = { taiThongBao() }) { Text("Tải lại") }
+            androidx.compose.material3.TextButton(onClick = {
+                if (android.os.Build.VERSION.SDK_INT >= 33) xinQuyenThongBao.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+            }) { Text("Bật thông báo đẩy") }
+        }
+        androidx.compose.material3.TextButton(onClick = { hienTuyChon = !hienTuyChon }) { Text("Tùy chọn tài khoản") }
+        if (hienTuyChon) {
+            if (prefs.maLop.isNotBlank()) androidx.compose.material3.TextButton(onClick = {
                 prefs.roiLop()
                 lop = null
                 maLopNhap = ""
-            }
+            }) { Text("Rời lớp") }
+            androidx.compose.material3.TextButton(onClick = onDoiVai) { Text("Đổi vai") }
         }
-        Spacer(Modifier.height(16.dp))
-        NutLon("Ôn bài tự do", onClick = onOnTuDo)
-        Text(
-            "Ôn bài tự do không tính vào điểm lớp, không giới hạn thời gian, " +
-                "làm xong mỗi câu sẽ hiện đáp án đúng ngay.",
-            fontSize = 14.sp,
-            color = Color.Gray,
-        )
         ThongBaoLoi(loi)
         ThongBaoTot(thongBao)
-        Spacer(Modifier.height(16.dp))
-        NutPhu("Đổi vai", onClick = onDoiVai)
     }
 }
 
