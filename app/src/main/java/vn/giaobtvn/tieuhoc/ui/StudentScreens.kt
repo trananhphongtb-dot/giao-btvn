@@ -129,7 +129,7 @@ fun StudentHomeScreen(
         ) {
             Row(Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text("🔔 Thông báo", fontSize = 16.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
-                Text(if (chuaDoc > 0) "$" + "{chuaDoc} chưa đọc" else "Xem thông báo", fontSize = 13.sp, color = Color(0xFF1565C0))
+                Text(if (chuaDoc > 0) "${chuaDoc} chưa đọc" else "Xem thông báo", fontSize = 13.sp, color = Color(0xFF1565C0))
             }
         }
         if (hienThongBao) {
