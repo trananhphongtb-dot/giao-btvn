@@ -38,9 +38,9 @@ import androidx.compose.ui.unit.sp
 // Không dùng ảnh ngoài, để app nhẹ và không phụ thuộc file ảnh.
 // ============================================================================
 
-private val CanhNenTren = Color(0xFFBBDEFB)
-private val CanhNenGiua = Color(0xFFE3F2FD)
-private val CanhNenDuoi = Color(0xFFFFFFFF)
+private val CanhNenTren = Color(0xFFF6F8FC)
+private val CanhNenGiua = Color(0xFFF6F8FC)
+private val CanhNenDuoi = Color(0xFFF6F8FC)
 
 /** Khung cảnh dọc: bọc toàn bộ nội dung một màn hình. */
 @Composable
@@ -57,14 +57,14 @@ fun CanhDoc(noiDung: @Composable ColumnScope.() -> Unit) {
         // Vòng tròn trang trí mờ ở góc trên và góc dưới, tạo cảm giác cảnh.
         Box(
             Modifier
-                .size(220.dp)
+                .size(0.dp)
                 .offset((-60).dp, (-60).dp)
                 .clip(CircleShape)
                 .background(Color(0xFF90CAF9).copy(alpha = 0.35f))
         )
         Box(
             Modifier
-                .size(180.dp)
+                .size(0.dp)
                 .align(Alignment.BottomEnd)
                 .offset(50.dp, 50.dp)
                 .clip(CircleShape)
@@ -74,7 +74,7 @@ fun CanhDoc(noiDung: @Composable ColumnScope.() -> Unit) {
             Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(20.dp),
+                .padding(horizontal = 16.dp, vertical = 12.dp),
             content = noiDung,
         )
     }
@@ -83,12 +83,12 @@ fun CanhDoc(noiDung: @Composable ColumnScope.() -> Unit) {
 /** Tiêu đề trên cảnh dọc: chữ trắng, nổi trên nền gradient. */
 @Composable
 fun TieuDeCanh(tieuDe: String, phuDe: String = "") {
-    Text(tieuDe, fontSize = 26.sp, fontWeight = FontWeight.Bold, color = Color(0xFF0D47A1))
+    Text(tieuDe, fontSize = 23.sp, fontWeight = FontWeight.Bold, color = Color(0xFF0D47A1))
     if (phuDe.isNotBlank()) {
         Spacer(Modifier.height(4.dp))
         Text(phuDe, fontSize = 15.sp, color = Color.DarkGray)
     }
-    Spacer(Modifier.height(16.dp))
+    Spacer(Modifier.height(10.dp))
 }
 
 /**
@@ -100,12 +100,11 @@ fun TieuDeCanh(tieuDe: String, phuDe: String = "") {
 fun Khung(tieuDe: String, phuDe: String = "", noiDung: @Composable ColumnScope.() -> Unit) {
     Card(
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        shape = RoundedCornerShape(20.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        shape = RoundedCornerShape(14.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 6.dp)
-            .border(1.dp, Color(0xFFBBDEFB), RoundedCornerShape(20.dp)),
+            .padding(vertical = 4.dp),
     ) {
         Column(Modifier.padding(16.dp)) {
             Text(tieuDe, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color(0xFF0D47A1))
