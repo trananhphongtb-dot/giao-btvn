@@ -184,8 +184,6 @@ fun TeacherHomeScreen(
     onMoLop: (String) -> Unit,
     onDoiVai: () -> Unit,
     onNhapCauHoi: () -> Unit = {},
-    // 3 lối vào rõ ràng: tạo BTVN trắc nghiệm (chọn lớp), tự up câu hỏi
-    // vào ngân hàng chung, xem ngân hàng BTVN chung.
     onTaoTracNghiemChoLop: (String) -> Unit = {},
     onNganHangChung: () -> Unit = {},
 ) {
@@ -196,30 +194,24 @@ fun TeacherHomeScreen(
     var loi by remember { mutableStateOf("") }
     var maTim by remember { mutableStateOf("") }
     var hienTimTheoMa by remember { mutableStateOf(false) }
-
+    var hienTaiKhoan by remember { mutableStateOf(false) }
     fun taiLop(gv: GiaoVienDaDangNhap) {
         dangTai = true
-        loi = ""
         scope.launch {
             repo.layLopCuaGiaoVien(gv.uid)
                 .onSuccess { lopList = it }
-                .onFailure { loi = "Không tải được danh sách lớp, kiểm tra mạng rồi thử lại" }
+                .onFailure { loi = "Không tải được danh sách lớp. Vui lòng thử lại." }
             dangTai = false
         }
     }
-    // Danh sách tự tải khi mở trang, không cần bấm tải lại.
-    LaunchedEffect(giaoVien?.uid) {
-        giaoVien?.let { taiLop(it) }
-    }
-
+    LaunchedEffect(giaoVien?.uid) { giaoVien?.let { taiLop(it) } }
     CanhDoc {
-        TieuDeCanh("Giáo viên", "Tạo lớp, giao bài, chấm bài và xem thống kê")
         val gv = giaoVien
+        TieuDeCanh("Giáo viên", if (gv != null) "Xin chào, ${gv.ten}" else "Quản lý bài tập và lớp học")
         if (gv == null) {
-            Text("Giáo viên cần đăng nhập Google để quản lý lớp của mình.", fontSize = 16.sp)
-            Spacer(Modifier.height(16.dp))
+            Text("Đăng nhập Google để quản lý lớp học.")
+            Spacer(Modifier.height(12.dp))
             NutLon("Đăng nhập bằng Google") {
-                loi = ""
                 scope.launch {
                     DangNhapGoogle.dangNhap(activity)
                         .onSuccess { giaoVien = it }
@@ -227,86 +219,63 @@ fun TeacherHomeScreen(
                 }
             }
         } else {
-            Text("Xin chào, ${gv.ten}", fontSize = 18.sp, fontWeight = FontWeight.Bold)
-            // Hiện rõ email đang đăng nhập, vì lớp chỉ hiện theo đúng
-            // tài khoản đã tạo lớp. Nếu cô vừa đăng nhập vai học sinh
-            // bằng Gmail khác rồi quay lại vai giáo viên, tài khoản ở
-            // đây sẽ khác tài khoản tạo lớp, và lớp cũ sẽ không hiện.
-            if (gv.email.isNotBlank()) {
-                Text("Tài khoản: ${gv.email}", fontSize = 15.sp, color = Color.DarkGray)
-            }
-            if (loi.isNotBlank()) {
-                Spacer(Modifier.height(8.dp))
-                Text(loi, fontSize = 15.sp, color = Color(0xFFD32F2F), fontWeight = FontWeight.Bold)
+            // Lưới 2 cột: tất cả tác vụ quan trọng nằm ngay đầu màn hình.
+            androidx.compose.foundation.layout.Column(verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp)) {
+                Row(horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp)) {
+                    androidx.compose.material3.Button(onClick = onTaoLop, modifier = Modifier.weight(1f).height(48.dp)) { Text("＋ Tạo lớp", maxLines = 1) }
+                    androidx.compose.material3.OutlinedButton(onClick = onNhapCauHoi, modifier = Modifier.weight(1f).height(48.dp)) { Text("↑ Up câu hỏi", maxLines = 1) }
+                }
+                Row(horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp)) {
+                    androidx.compose.material3.OutlinedButton(onClick = onNganHangChung, modifier = Modifier.weight(1f).height(48.dp)) { Text("Ngân hàng", maxLines = 1) }
+                    androidx.compose.material3.OutlinedButton(
+                        onClick = { lopList.firstOrNull()?.let { onTaoTracNghiemChoLop(it.maLop) } },
+                        enabled = lopList.isNotEmpty(),
+                        modifier = Modifier.weight(1f).height(48.dp),
+                    ) { Text("Giao trắc nghiệm", maxLines = 1) }
+                }
             }
             Spacer(Modifier.height(12.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
-                NutNhoQuanLy("Tạo lớp", onClick = onTaoLop)
-                NutNhoQuanLy("Up câu hỏi", onClick = onNhapCauHoi)
-                NutNhoQuanLy("Ngân hàng", onClick = onNganHangChung)
+                Text("Lớp của tôi (${lopList.size})", fontSize = 17.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                androidx.compose.material3.TextButton(onClick = { taiLop(gv) }) { Text("Làm mới") }
             }
-            Spacer(Modifier.height(12.dp))
-            Text("Các lớp của tôi — quản lý lớp:", fontSize = 17.sp, fontWeight = FontWeight.Bold)
+            if (dangTai) Text("Đang tải lớp...")
+            else if (lopList.isEmpty()) Text("Chưa có lớp. Bấm Tạo lớp để bắt đầu.", color = Color.Gray)
+            else lopList.forEach { lop ->
+                TheQuanLyLop(lop, { onMoLop(lop.maLop) }, { onTaoTracNghiemChoLop(lop.maLop) })
+            }
             Spacer(Modifier.height(8.dp))
-            if (dangTai) {
-                Text("Đang tải...")
-            } else if (lopList.isEmpty()) {
-                Text("Chưa có lớp nào. Hãy tạo lớp đầu tiên rồi chia sẻ mã lớp cho học sinh.")
-            } else {
-                lopList.forEach { lop ->
-                    TheQuanLyLop(
-                        lop = lop,
-                        onQuanLy = { onMoLop(lop.maLop) },
-                        onTaoTracNghiem = { onTaoTracNghiemChoLop(lop.maLop) },
-                    )
-                }
-            }
-            Spacer(Modifier.height(16.dp))
-            // Đường cứu nhỏ ở cuối, KHÔNG phải bước chính: bình thường
-            // cô chỉ cần bấm vào lớp ở danh sách trên là quản lý được.
-            // Chỉ khi lớp không hiện thì mới bấm đây để mở theo mã.
-            NutPhu("Không thấy lớp? Mở theo mã") { hienTimTheoMa = !hienTimTheoMa }
+            androidx.compose.material3.TextButton(onClick = { hienTimTheoMa = !hienTimTheoMa }) { Text("Không thấy lớp? Mở bằng mã") }
             if (hienTimTheoMa) {
-                Spacer(Modifier.height(8.dp))
-                OutlinedTextField(
-                    maTim,
-                    { maTim = it.uppercase() },
-                    label = { Text("Nhập mã lớp, ví dụ: AB12CD") },
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                Spacer(Modifier.height(8.dp))
-                NutNhoQuanLy("Mở lớp theo mã") {
+                OutlinedTextField(maTim, { maTim = it.uppercase() }, label = { Text("Mã lớp") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
+                androidx.compose.material3.TextButton(onClick = {
                     val ma = maTim.trim()
-                    if (ma.isBlank()) {
-                        loi = "Cô nhập mã lớp trước đã."
-                    } else {
-                        scope.launch {
-                            repo.layLopTheoMa(ma)
-                                .onSuccess { lopTim ->
-                                    if (lopTim.giaoVienId.isNotBlank() && lopTim.giaoVienId != gv.uid) {
-                                        loi = "Lớp này thuộc tài khoản khác, không phải tài khoản đang đăng nhập (${gv.email}). Cô hãy đăng nhập đúng tài khoản đã tạo lớp rồi mở lại."
-                                    } else {
-                                        onMoLop(lopTim.maLop)
-                                    }
-                                }
-                                .onFailure { loi = "Không tìm thấy lớp với mã này, cô kiểm tra lại mã lớp." }
-                        }
+                    if (ma.isBlank()) loi = "Vui lòng nhập mã lớp."
+                    else scope.launch {
+                        repo.layLopTheoMa(ma)
+                            .onSuccess { lopTim ->
+                                if (lopTim.giaoVienId.isNotBlank() && lopTim.giaoVienId != gv.uid) loi = "Lớp thuộc tài khoản Google khác."
+                                else onMoLop(lopTim.maLop)
+                            }
+                            .onFailure { loi = "Không tìm thấy lớp." }
                     }
+                }) { Text("Mở lớp") }
+            }
+            androidx.compose.material3.TextButton(onClick = { hienTaiKhoan = !hienTaiKhoan }) { Text("Tài khoản và tùy chọn") }
+            if (hienTaiKhoan) {
+                Text(gv.email, fontSize = 13.sp, color = Color.Gray)
+                Row {
+                    androidx.compose.material3.TextButton(onClick = {
+                        DangNhapGoogle.dangXuat()
+                        giaoVien = null
+                        lopList = emptyList()
+                    }) { Text("Đăng xuất") }
+                    androidx.compose.material3.TextButton(onClick = onDoiVai) { Text("Đổi vai") }
                 }
             }
         }
         ThongBaoLoi(loi)
-        Spacer(Modifier.height(12.dp))
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            if (giaoVien != null) {
-                NutNhoQuanLy("Đăng xuất") {
-                    DangNhapGoogle.dangXuat()
-                    giaoVien = null
-                    lopList = emptyList()
-                }
-            }
-            NutNhoQuanLy("Đổi vai", onClick = onDoiVai)
-        }
+        if (gv == null) NutPhu("Đổi vai", onClick = onDoiVai)
     }
 }
 
@@ -325,26 +294,20 @@ fun TheQuanLyLop(
     val context = LocalContext.current
     var daSaoChep by remember { mutableStateOf(false) }
     androidx.compose.material3.Card(
+        onClick = onQuanLy,
         colors = androidx.compose.material3.CardDefaults.cardColors(containerColor = Color.White),
-        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+        modifier = Modifier.fillMaxWidth().padding(vertical = 3.dp),
     ) {
-        Column(Modifier.padding(12.dp)) {
-            Text("${lop.tenLop} — Mã: ${lop.maLop}", fontSize = 17.sp, fontWeight = FontWeight.Bold)
-            Text("${lop.hocSinh.size} học sinh đã tham gia", fontSize = 14.sp, color = Color.DarkGray)
-            Spacer(Modifier.height(8.dp))
-            // 3 nút gọn trong đúng 1 hàng, không dãi thành 2 hàng nữa.
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                NutNhoNho("Quản lý", onClick = onQuanLy)
-                NutNhoNho("Sao chép mã") {
-                    saoChepMaLop(context, lop.maLop)
-                    daSaoChep = true
-                }
-                NutNhoNho("Trắc nghiệm", onClick = onTaoTracNghiem)
+        Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 9.dp), verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+                Text(lop.tenLop, fontSize = 16.sp, fontWeight = FontWeight.SemiBold, maxLines = 1)
+                Text("${lop.hocSinh.size} học sinh · ${lop.maLop}", fontSize = 13.sp, color = Color.Gray)
             }
-            if (daSaoChep) {
-                Spacer(Modifier.height(4.dp))
-                Text("Đã sao chép mã ${lop.maLop}", fontSize = 14.sp, color = Color(0xFF2E7D32))
-            }
+            androidx.compose.material3.TextButton(onClick = {
+                saoChepMaLop(context, lop.maLop)
+                daSaoChep = true
+            }) { Text(if (daSaoChep) "Đã chép" else "Chép mã", fontSize = 12.sp) }
+            androidx.compose.material3.TextButton(onClick = onTaoTracNghiem) { Text("Giao bài", fontSize = 12.sp) }
         }
     }
 }
