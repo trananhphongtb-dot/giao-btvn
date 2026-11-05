@@ -213,7 +213,7 @@ fun TeacherHomeScreen(
     }
 
     CanhDoc {
-        TieuDeCanh("Giáo viên", "Tạo lớp, giao bài, chấm bài và xem thống kê")
+        TieuDeCanh("Giáo viên")
         val gv = giaoVien
         if (gv == null) {
             Text("Giáo viên cần đăng nhập Google để quản lý lớp của mình.", fontSize = 16.sp)
@@ -227,26 +227,26 @@ fun TeacherHomeScreen(
                 }
             }
         } else {
-            Text("Xin chào, ${gv.ten}", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+            Text("Xin chào, ${gv.ten}", fontSize = 16.sp, fontWeight = FontWeight.Bold)
             // Hiện rõ email đang đăng nhập, vì lớp chỉ hiện theo đúng
             // tài khoản đã tạo lớp. Nếu cô vừa đăng nhập vai học sinh
             // bằng Gmail khác rồi quay lại vai giáo viên, tài khoản ở
             // đây sẽ khác tài khoản tạo lớp, và lớp cũ sẽ không hiện.
             if (gv.email.isNotBlank()) {
-                Text("Tài khoản: ${gv.email}", fontSize = 15.sp, color = Color.DarkGray)
+                Text(gv.email, fontSize = 12.sp, color = Color.Gray, maxLines = 1)
             }
             if (loi.isNotBlank()) {
                 Spacer(Modifier.height(8.dp))
                 Text(loi, fontSize = 15.sp, color = Color(0xFFD32F2F), fontWeight = FontWeight.Bold)
             }
             Spacer(Modifier.height(12.dp))
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                NutNhoQuanLy("Tạo lớp", onClick = onTaoLop)
-                NutNhoQuanLy("Up câu hỏi", onClick = onNhapCauHoi)
-                NutNhoQuanLy("Ngân hàng", onClick = onNganHangChung)
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                androidx.compose.material3.Button(onClick = onTaoLop, modifier = Modifier.weight(1f).padding(end = 3.dp), contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 3.dp)) { Text("Tạo lớp", fontSize = 13.sp, maxLines = 1) }
+                androidx.compose.material3.Button(onClick = onNhapCauHoi, modifier = Modifier.weight(1f).padding(horizontal = 3.dp), contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 3.dp)) { Text("Up câu hỏi", fontSize = 13.sp, maxLines = 1) }
+                androidx.compose.material3.Button(onClick = onNganHangChung, modifier = Modifier.weight(1f).padding(start = 3.dp), contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 3.dp)) { Text("Ngân hàng", fontSize = 13.sp, maxLines = 1) }
             }
-            Spacer(Modifier.height(12.dp))
-            Text("Các lớp của tôi — quản lý lớp:", fontSize = 17.sp, fontWeight = FontWeight.Bold)
+            Spacer(Modifier.height(4.dp))
+            Text("Lớp của tôi (${lopList.size})", fontSize = 16.sp, fontWeight = FontWeight.Bold)
             Spacer(Modifier.height(8.dp))
             if (dangTai) {
                 Text("Đang tải...")
@@ -326,11 +326,11 @@ fun TheQuanLyLop(
     var daSaoChep by remember { mutableStateOf(false) }
     androidx.compose.material3.Card(
         colors = androidx.compose.material3.CardDefaults.cardColors(containerColor = Color.White),
-        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+        modifier = Modifier.fillMaxWidth().padding(vertical = 3.dp),
     ) {
-        Column(Modifier.padding(12.dp)) {
-            Text("${lop.tenLop} — Mã: ${lop.maLop}", fontSize = 17.sp, fontWeight = FontWeight.Bold)
-            Text("${lop.hocSinh.size} học sinh đã tham gia", fontSize = 14.sp, color = Color.DarkGray)
+        Column(Modifier.padding(9.dp)) {
+            Text("${lop.tenLop} · ${lop.maLop}", fontSize = 15.sp, fontWeight = FontWeight.Bold)
+            Text("${lop.hocSinh.size} học sinh", fontSize = 12.sp, color = Color.DarkGray)
             Spacer(Modifier.height(8.dp))
             // 3 nút gọn trong đúng 1 hàng, không dãi thành 2 hàng nữa.
             Row(verticalAlignment = Alignment.CenterVertically) {
