@@ -101,14 +101,63 @@ fun StudentHomeScreen(
     }
 
     CanhDoc {
-        TieuDeCanh("Học sinh", "Tham gia lớp để làm bài cô giao, hoặc ôn bài tự do")
+        TieuDeCanh("Học sinh")
+        val lopHienTai = lop
+        if (prefs.maLop.isBlank()) {
+            Text("Bạn chưa tham gia lớp nào. Nhập mã lớp cô cho để vào lớp:", fontSize = 16.sp)
+            Spacer(Modifier.height(12.dp))
+            OutlinedTextField(maLopNhap, { maLopNhap = it }, label = { Text("Mã lớp, ví dụ: K7X2Q9") }, modifier = Modifier.fillMaxWidth())
+            Spacer(Modifier.height(8.dp))
+            OutlinedTextField(tenNhap, { tenNhap = it }, label = { Text("Tên của bạn") }, modifier = Modifier.fillMaxWidth())
+            Spacer(Modifier.height(12.dp))
+            NutLon("Tham gia lớp", bat = maLopNhap.isNotBlank() && tenNhap.isNotBlank()) {
+                loi = ""
+                scope.launch {
+                    repo.thamGiaLop(maLopNhap, prefs.hocSinhId, tenNhap)
+                        .onSuccess {
+                            prefs.maLop = chuanHoaMaLop(maLopNhap)
+                            prefs.tenHocSinh = tenNhap.trim()
+                            lop = it
+                            thongBao = "Đã tham gia lớp ${it.tenLop}"
+                        }
+                        .onFailure { loi = "Không tìm thấy lớp với mã này, kiểm tra lại mã lớp" }
+                }
+            }
+        } else {
+            Text(
+                "Lớp của bạn: ${lopHienTai?.tenLop ?: prefs.maLop} (mã ${prefs.maLop})",
+                fontSize = 17.sp,
+                fontWeight = FontWeight.Bold,
+            )
+            Text("Tên của bạn: ${prefs.tenHocSinh}", fontSize = 16.sp)
+            Spacer(Modifier.height(8.dp))
+            NutLon("Xem bài cô giao", onClick = onXemBai)
+            Spacer(Modifier.height(8.dp))
+            NutPhu("Rời lớp này") {
+                prefs.roiLop()
+                lop = null
+                maLopNhap = ""
+            }
+        }
+        Spacer(Modifier.height(8.dp))
+        NutLon("Ôn bài tự do", onClick = onOnTuDo)
+        Text(
+            "Ôn bài tự do không tính vào điểm lớp, không giới hạn thời gian, " +
+                "làm xong mỗi câu sẽ hiện đáp án đúng ngay.",
+            fontSize = 14.sp,
+            color = Color.Gray,
+        )
         // Hộp thông báo: bài mới + nhắc làm bài, kể cả khi app vừa mở lại.
         val chuaDoc = thongBaoList.count { !it.daDoc }
-        Khung("🔔 Thông báo", if (chuaDoc > 0) "$chuaDoc thông báo chưa đọc" else "Không có thông báo mới") {
+        var moThongBao by remember { mutableStateOf(false) }
+        androidx.compose.material3.OutlinedButton(onClick = { moThongBao = !moThongBao }, modifier = Modifier.fillMaxWidth()) {
+            Text("🔔 Thông báo (${chuaDoc} chưa đọc) " + if (moThongBao) "▲" else "▼")
+        }
+        if (moThongBao) Khung("Thông báo") {
             if (thongBaoList.isEmpty()) {
                 Text("Cô chưa gửi thông báo nào cho bạn.", fontSize = 15.sp)
             } else {
-                thongBaoList.take(5).forEach { tb ->
+                thongBaoList.take(2).forEach { tb ->
                     Column(Modifier.fillMaxWidth().padding(vertical = 6.dp)) {
                         Text(tb.tieuDe, fontSize = 16.sp, fontWeight = FontWeight.Bold)
                         Text(tb.noiDung, fontSize = 14.sp, color = Color.DarkGray)
@@ -140,51 +189,6 @@ fun StudentHomeScreen(
                 fontSize = 13.sp, color = Color.Gray,
             )
         }
-        val lopHienTai = lop
-        if (prefs.maLop.isBlank()) {
-            Text("Bạn chưa tham gia lớp nào. Nhập mã lớp cô cho để vào lớp:", fontSize = 16.sp)
-            Spacer(Modifier.height(12.dp))
-            OutlinedTextField(maLopNhap, { maLopNhap = it }, label = { Text("Mã lớp, ví dụ: K7X2Q9") }, modifier = Modifier.fillMaxWidth())
-            Spacer(Modifier.height(8.dp))
-            OutlinedTextField(tenNhap, { tenNhap = it }, label = { Text("Tên của bạn") }, modifier = Modifier.fillMaxWidth())
-            Spacer(Modifier.height(12.dp))
-            NutLon("Tham gia lớp", bat = maLopNhap.isNotBlank() && tenNhap.isNotBlank()) {
-                loi = ""
-                scope.launch {
-                    repo.thamGiaLop(maLopNhap, prefs.hocSinhId, tenNhap)
-                        .onSuccess {
-                            prefs.maLop = chuanHoaMaLop(maLopNhap)
-                            prefs.tenHocSinh = tenNhap.trim()
-                            lop = it
-                            thongBao = "Đã tham gia lớp ${it.tenLop}"
-                        }
-                        .onFailure { loi = "Không tìm thấy lớp với mã này, kiểm tra lại mã lớp" }
-                }
-            }
-        } else {
-            Text(
-                "Lớp của bạn: ${lopHienTai?.tenLop ?: prefs.maLop} (mã ${prefs.maLop})",
-                fontSize = 17.sp,
-                fontWeight = FontWeight.Bold,
-            )
-            Text("Tên của bạn: ${prefs.tenHocSinh}", fontSize = 16.sp)
-            Spacer(Modifier.height(16.dp))
-            NutLon("Xem bài cô giao", onClick = onXemBai)
-            Spacer(Modifier.height(8.dp))
-            NutPhu("Rời lớp này") {
-                prefs.roiLop()
-                lop = null
-                maLopNhap = ""
-            }
-        }
-        Spacer(Modifier.height(16.dp))
-        NutLon("Ôn bài tự do", onClick = onOnTuDo)
-        Text(
-            "Ôn bài tự do không tính vào điểm lớp, không giới hạn thời gian, " +
-                "làm xong mỗi câu sẽ hiện đáp án đúng ngay.",
-            fontSize = 14.sp,
-            color = Color.Gray,
-        )
         ThongBaoLoi(loi)
         ThongBaoTot(thongBao)
         Spacer(Modifier.height(16.dp))
