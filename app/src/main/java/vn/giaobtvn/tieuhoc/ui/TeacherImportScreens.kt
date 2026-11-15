@@ -575,13 +575,3 @@ private fun DuyetCauScreen(
     }
 }
 
-@Composable
-private fun NutNho(text: String, bat: Boolean = true, onClick: () -> Unit) {
-    androidx.compose.material3.OutlinedButton(
-        onClick = onClick,
-        enabled = bat,
-        modifier = Modifier.padding(end = 8.dp),
-    ) {
-        Text(text, fontSize = 14.sp)
-    }
-}

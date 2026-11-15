@@ -28,6 +28,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
@@ -295,7 +296,7 @@ fun NhomChon(tieuDe: String, cacLuaChon: List<String>, daChon: String, onChon: (
 
 /** Nút nhỏ nổi khối cho hàng nút (không giãn hết chiều ngang). */
 @Composable
-fun NutNho(text: String, chinh: Boolean = false, onClick: () -> Unit) {
+fun NutNho(text: String, bat: Boolean = true, chinh: Boolean = false, onClick: () -> Unit) {
     val nguon = remember { MutableInteractionSource() }
     val dangNhan by nguon.collectIsPressedAsState()
     val mep = 4.dp
@@ -308,7 +309,8 @@ fun NutNho(text: String, chinh: Boolean = false, onClick: () -> Unit) {
     Box(
         Modifier
             .padding(end = 8.dp, bottom = 4.dp)
-            .clickable(interactionSource = nguon, indication = null, onClick = onClick),
+            .clickable(interactionSource = nguon, indication = null, enabled = bat, onClick = onClick)
+            .alpha(if (bat) 1f else 0.45f),
     ) {
         Box(Modifier.matchParentSize().padding(top = mep).clip(hinh).background(day))
         Box(
