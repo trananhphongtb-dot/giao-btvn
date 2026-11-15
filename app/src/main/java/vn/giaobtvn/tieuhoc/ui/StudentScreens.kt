@@ -8,6 +8,8 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -15,6 +17,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.OutlinedTextField
@@ -101,17 +104,20 @@ fun StudentHomeScreen(
     }
 
     CanhDoc {
-        TieuDeCanh("Học sinh", "Tham gia lớp để làm bài cô giao, hoặc ôn bài tự do")
+        TieuDeCanh(
+            if (prefs.tenHocSinh.isNotBlank()) "Xin chào, ${prefs.tenHocSinh}!" else "Xin chào bạn!",
+            "Làm bài cô giao hoặc ôn bài tự do",
+        )
         // Hộp thông báo: bài mới + nhắc làm bài, kể cả khi app vừa mở lại.
         val chuaDoc = thongBaoList.count { !it.daDoc }
         Khung("🔔 Thông báo", if (chuaDoc > 0) "$chuaDoc thông báo chưa đọc" else "Không có thông báo mới") {
             if (thongBaoList.isEmpty()) {
-                Text("Cô chưa gửi thông báo nào cho bạn.", fontSize = 15.sp)
+                Text("Cô chưa gửi thông báo nào cho bạn.", fontSize = 15.sp, color = Mau.ChuPhu)
             } else {
                 thongBaoList.take(5).forEach { tb ->
                     Column(Modifier.fillMaxWidth().padding(vertical = 6.dp)) {
-                        Text(tb.tieuDe, fontSize = 16.sp, fontWeight = FontWeight.Bold)
-                        Text(tb.noiDung, fontSize = 14.sp, color = Color.DarkGray)
+                        Text(tb.tieuDe, fontSize = 16.sp, fontWeight = FontWeight.ExtraBold, color = Mau.Chu)
+                        Text(tb.noiDung, fontSize = 14.sp, color = Mau.ChuPhu)
                         Text(
                             vn.giaobtvn.tieuhoc.data.dinhDangThoiGianThongBao(tb.thoiGian) +
                                 if (tb.daDoc) "" else " — Chưa đọc",
@@ -162,14 +168,21 @@ fun StudentHomeScreen(
                 }
             }
         } else {
-            Text(
-                "Lớp của bạn: ${lopHienTai?.tenLop ?: prefs.maLop} (mã ${prefs.maLop})",
-                fontSize = 17.sp,
-                fontWeight = FontWeight.Bold,
-            )
-            Text("Tên của bạn: ${prefs.tenHocSinh}", fontSize = 16.sp)
-            Spacer(Modifier.height(16.dp))
-            NutLon("Xem bài cô giao", onClick = onXemBai)
+            The3D(Modifier.fillMaxWidth().padding(vertical = 6.dp)) {
+                Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                    HuyHieuTron("🏫", Mau.XanhSang, Mau.XanhDam, kichThuoc = 52.dp, coChu = 26)
+                    Column(Modifier.weight(1f).padding(start = 14.dp)) {
+                        Text("Lớp của bạn", fontSize = 13.sp, color = Mau.ChuPhu)
+                        Text(
+                            lopHienTai?.tenLop ?: prefs.maLop,
+                            fontSize = 20.sp, fontWeight = FontWeight.ExtraBold, color = Mau.Chu,
+                        )
+                        Text("Mã ${prefs.maLop} · ${prefs.tenHocSinh}", fontSize = 14.sp, color = Mau.ChuPhu)
+                    }
+                }
+            }
+            Spacer(Modifier.height(12.dp))
+            NutLon("📚  Xem bài cô giao", onClick = onXemBai)
             Spacer(Modifier.height(8.dp))
             NutPhu("Rời lớp này") {
                 val maCu = prefs.maLop
@@ -184,12 +197,12 @@ fun StudentHomeScreen(
             }
         }
         Spacer(Modifier.height(16.dp))
-        NutLon("Ôn bài tự do", onClick = onOnTuDo)
+        NutLon("🎯  Ôn bài tự do", onClick = onOnTuDo)
         Text(
             "Ôn bài tự do không tính vào điểm lớp, không giới hạn thời gian, " +
                 "làm xong mỗi câu sẽ hiện đáp án đúng ngay.",
             fontSize = 14.sp,
-            color = Color.Gray,
+            color = Mau.ChuPhu,
         )
         ThongBaoLoi(loi)
         ThongBaoTot(thongBao)
@@ -230,19 +243,44 @@ fun DanhSachBaiGiaoScreen(
     CanhDoc {
         TieuDeCanh("Bài cô giao")
         if (baiList.isEmpty()) {
-            Text("Cô chưa giao bài nào cho lớp của bạn.")
+            The3D(Modifier.fillMaxWidth()) {
+                Column(Modifier.padding(24.dp).fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text("🎉", fontSize = 40.sp)
+                    Spacer(Modifier.height(6.dp))
+                    Text("Cô chưa giao bài nào cho lớp của bạn.", fontSize = 16.sp, color = Mau.ChuPhu)
+                }
+            }
         } else {
             baiList.forEach { bai ->
                 val nop = baiNopMap[bai.id]
                 val trangThai = trangThaiCuaHocSinh(nop, bai.hanNop, System.currentTimeMillis())
-                TheThongTin(
-                    tieuDe = bai.tieuDe,
-                    noiDung = (if (bai.loaiEnum == LoaiBaiGiao.GIAY) "Bài giấy" else "Trắc nghiệm") +
-                        " — Hạn nộp: ${dinhDangNgayGio(bai.hanNop)}" +
-                        " — ${nhanTrangThai(trangThai)}" +
-                        (if (nop?.diem != null) " — Điểm: ${nop.diem} / 10" else ""),
-                    onClick = { onMoBai(bai) },
-                )
+                val laGiay = bai.loaiEnum == LoaiBaiGiao.GIAY
+                The3D(Modifier.fillMaxWidth().padding(vertical = 6.dp), onClick = { onMoBai(bai) }) {
+                    Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                        HuyHieuTron(
+                            if (laGiay) "📝" else "⏱",
+                            if (laGiay) Mau.Cam else Mau.XanhSang,
+                            if (laGiay) Mau.VangDam else Mau.XanhDam,
+                            kichThuoc = 52.dp, coChu = 26,
+                        )
+                        Column(Modifier.weight(1f).padding(start = 14.dp)) {
+                            Text(bai.tieuDe, fontSize = 17.sp, fontWeight = FontWeight.ExtraBold, color = Mau.Chu)
+                            Text(
+                                (if (laGiay) "Bài giấy" else "Trắc nghiệm") + " · Hạn ${dinhDangNgayGio(bai.hanNop)}",
+                                fontSize = 13.sp, color = Mau.ChuPhu,
+                            )
+                            Spacer(Modifier.height(6.dp))
+                            Row {
+                                ChipTrangThai(trangThai)
+                                if (nop?.diem != null) {
+                                    Spacer(Modifier.width(6.dp))
+                                    VienThuoc("Điểm ${nop.diem}", Mau.Xanh)
+                                }
+                            }
+                        }
+                        Text("›", fontSize = 30.sp, fontWeight = FontWeight.Bold, color = Mau.XanhSang)
+                    }
+                }
             }
         }
         ThongBaoLoi(loi)
@@ -349,9 +387,19 @@ fun LamTracNghiemScreen(
                 NutPhu("Quay lại", onClick = onBack)
             }
             diemKetQua != null -> {
-                Text("Bạn đã nộp bài!", fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                Text("Điểm của bạn: $diemKetQua / 10", fontSize = 22.sp)
-                Text("Số câu đúng: ${kotlin.math.round(diemKetQua * cauGoc.size / 10.0).toInt()} / ${cauGoc.size}")
+                The3D(Modifier.fillMaxWidth(), mauBong = Mau.LucDam) {
+                    Column(Modifier.padding(24.dp).fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(if (diemKetQua >= 8.0) "🏆" else if (diemKetQua >= 5.0) "👏" else "💪", fontSize = 56.sp)
+                        Text("Bạn đã nộp bài!", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Mau.ChuPhu)
+                        Text("$diemKetQua", fontSize = 56.sp, fontWeight = FontWeight.ExtraBold, color = Mau.Xanh)
+                        Text("điểm / 10", fontSize = 15.sp, color = Mau.ChuPhu)
+                        Spacer(Modifier.height(8.dp))
+                        VienThuoc(
+                            "Đúng ${kotlin.math.round(diemKetQua * cauGoc.size / 10.0).toInt()} / ${cauGoc.size} câu",
+                            Mau.LucDam,
+                        )
+                    }
+                }
                 Spacer(Modifier.height(16.dp))
                 NutLon("Về danh sách bài", onClick = onXong)
             }
@@ -361,51 +409,55 @@ fun LamTracNghiemScreen(
                 NutPhu("Quay lại", onClick = onBack)
             }
             else -> {
-                DongHoDemNguoc(thoiGianHet) { nopBai() }
-                Spacer(Modifier.height(16.dp))
-                val cau = cauTron[chiSoHienTai]
-                Text("Câu ${chiSoHienTai + 1} / ${cauTron.size}", fontSize = 17.sp, fontWeight = FontWeight.Bold)
-                Spacer(Modifier.height(8.dp))
-                Text(cau.noiDung, fontSize = 18.sp)
-                val anhCau = baiGiao.cauHoiAnh[cau.id]
-                if (anhCau != null) {
-                    val bitmapCau = remember(anhCau) { giaiMaBase64ThanhBitmap(anhCau) }
-                    if (bitmapCau != null) {
-                        Spacer(Modifier.height(8.dp))
-                        Image(
-                            bitmapCau.asImageBitmap(),
-                            contentDescription = "Ảnh câu hỏi",
-                            modifier = Modifier.fillMaxWidth().height(240.dp),
-                        )
-                        Text("Chọn đáp án A, B, C hoặc D theo ảnh câu hỏi.", fontSize = 14.sp, color = Color.Gray)
-                    }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    DongHoDemNguoc(thoiGianHet) { nopBai() }
+                    Spacer(Modifier.weight(1f))
+                    VienThuoc("Đã làm ${dapAnTron.size}/${cauTron.size}", Mau.LucDam)
                 }
                 Spacer(Modifier.height(12.dp))
-                cau.cacDapAn.forEachIndexed { index, dapAn ->
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.clickable {
-                            dapAnTron = dapAnTron + (cau.id to index)
-                        }.padding(vertical = 4.dp),
-                    ) {
-                        RadioButton(
-                            selected = dapAnTron[cau.id] == index,
-                            onClick = { dapAnTron = dapAnTron + (cau.id to index) },
-                        )
-                        Text(dapAn, fontSize = 17.sp)
+                ThanhTienDo((chiSoHienTai + 1).toFloat() / cauTron.size)
+                Spacer(Modifier.height(14.dp))
+                val cau = cauTron[chiSoHienTai]
+                The3D(Modifier.fillMaxWidth()) {
+                    Column(Modifier.padding(20.dp)) {
+                        Text("Câu ${chiSoHienTai + 1} / ${cauTron.size}", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Mau.Xanh)
+                        Spacer(Modifier.height(8.dp))
+                        Text(cau.noiDung, fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Mau.Chu)
+                        val anhCau = baiGiao.cauHoiAnh[cau.id]
+                        if (anhCau != null) {
+                            val bitmapCau = remember(anhCau) { giaiMaBase64ThanhBitmap(anhCau) }
+                            if (bitmapCau != null) {
+                                Spacer(Modifier.height(10.dp))
+                                Image(
+                                    bitmapCau.asImageBitmap(),
+                                    contentDescription = "Ảnh câu hỏi",
+                                    modifier = Modifier.fillMaxWidth().height(240.dp),
+                                )
+                                Text("Chọn đáp án A, B, C hoặc D theo ảnh câu hỏi.", fontSize = 14.sp, color = Mau.ChuPhu)
+                            }
+                        }
                     }
                 }
-                Spacer(Modifier.height(16.dp))
-                NutPhu("Câu trước") {
-                    if (chiSoHienTai > 0) chiSoHienTai--
+                Spacer(Modifier.height(10.dp))
+                cau.cacDapAn.forEachIndexed { index, dapAn ->
+                    TheDapAn(
+                        chuCai = "ABCD".getOrElse(index) { '?' }.toString(),
+                        noiDung = dapAn,
+                        daChon = dapAnTron[cau.id] == index,
+                        onClick = { dapAnTron = dapAnTron + (cau.id to index) },
+                    )
                 }
-                Spacer(Modifier.height(8.dp))
-                NutPhu("Câu sau") {
-                    if (chiSoHienTai < cauTron.size - 1) chiSoHienTai++
+                Spacer(Modifier.height(12.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Box(Modifier.weight(1f)) {
+                        NutPhu("‹ Câu trước") { if (chiSoHienTai > 0) chiSoHienTai-- }
+                    }
+                    Box(Modifier.weight(1f)) {
+                        NutPhu("Câu sau ›") { if (chiSoHienTai < cauTron.size - 1) chiSoHienTai++ }
+                    }
                 }
-                Spacer(Modifier.height(16.dp))
+                Spacer(Modifier.height(6.dp))
                 NutLon("Nộp bài") { nopBai() }
-                Text("Bạn đã trả lời ${dapAnTron.size} / ${cauTron.size} câu.", fontSize = 14.sp, color = Color.Gray)
             }
         }
         ThongBaoLoi(loi)
@@ -653,54 +705,27 @@ fun OnTuDoScreen(
             "Chọn Môn/Chương, hệ thống lấy ngẫu nhiên câu hỏi trong app và " +
                 "câu đã duyệt của cô (nếu bạn đã tham gia lớp).",
         )
-        Text("Môn:", fontWeight = FontWeight.Bold)
-        cacMon.forEach { ten ->
-            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable {
+        Khung("Chọn nội dung ôn") {
+            NhomChon("Môn", cacMon, chuDe) { ten ->
                 chuDe = ten
                 chuong = "Tất cả"
                 bai = "Tất cả"
-            }) {
-                RadioButton(selected = chuDe == ten, onClick = {
-                    chuDe = ten
-                    chuong = "Tất cả"
-                    bai = "Tất cả"
-                })
-                Text(ten, fontSize = 16.sp)
             }
-        }
-        Spacer(Modifier.height(8.dp))
-        Text("Chương:", fontWeight = FontWeight.Bold)
-        cacChuong.forEach { ten ->
-            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable {
+            NhomChon("Chương", cacChuong, chuong) { ten ->
                 chuong = ten
                 bai = "Tất cả"
-            }) {
-                RadioButton(selected = chuong == ten, onClick = {
-                    chuong = ten
-                    bai = "Tất cả"
-                })
-                Text(ten, fontSize = 16.sp)
             }
-        }
-        Spacer(Modifier.height(8.dp))
-        Text("Bài:", fontWeight = FontWeight.Bold)
-        cacBai.forEach { ten ->
-            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { bai = ten }) {
-                RadioButton(selected = bai == ten, onClick = { bai = ten })
-                Text(ten, fontSize = 16.sp)
-            }
-        }
-        Spacer(Modifier.height(12.dp))
-        Text("Số câu mỗi lượt ôn:", fontWeight = FontWeight.Bold)
-        listOf(5, 10, 15).forEach { n ->
-            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { soCau = n }) {
-                RadioButton(selected = soCau == n, onClick = { soCau = n })
-                Text("$n câu", fontSize = 16.sp)
+            NhomChon("Bài", cacBai, bai) { ten -> bai = ten }
+            NhomChon("Số câu mỗi lượt", listOf("5 câu", "10 câu", "15 câu"), "$soCau câu") { ten ->
+                soCau = ten.substringBefore(" ").toIntOrNull() ?: 10
             }
         }
         Spacer(Modifier.height(16.dp))
         val soCauCoSan = cauLoc.size
-        Text("Ngân hàng có $soCauCoSan câu cho lựa chọn này (gồm câu trong app và câu đã duyệt của cô).")
+        Text(
+            "Ngân hàng có $soCauCoSan câu cho lựa chọn này (gồm câu trong app và câu đã duyệt của cô).",
+            fontSize = 14.sp, color = Mau.ChuPhu,
+        )
         Spacer(Modifier.height(8.dp))
         NutLon("Bắt đầu luyện", bat = soCauCoSan > 0) {
             cauLuyen = QuestionBank(cauLoc).layNgauNhien(cauLoc, soCau)
@@ -736,7 +761,9 @@ private fun OnTuDoLamScreen(
     CanhDoc {
         val cau = cauHoi[chiSo]
         TieuDeCanh("Ôn bài tự do", "Câu ${chiSo + 1} / ${cauHoi.size}")
-        Text(cau.noiDung, fontSize = 18.sp)
+        ThanhTienDo((chiSo + 1).toFloat() / cauHoi.size)
+        Spacer(Modifier.height(14.dp))
+        Text(cau.noiDung, fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Mau.Chu)
         val anhCau = anhTheoCau[cau.id]
         if (anhCau != null) {
             val bitmapCau = remember(anhCau) { giaiMaBase64ThanhBitmap(anhCau) }
@@ -752,26 +779,20 @@ private fun OnTuDoLamScreen(
         }
         Spacer(Modifier.height(12.dp))
         cau.cacDapAn.forEachIndexed { index, dapAn ->
-            val mau = when {
-                !daKiemTra -> Color.DarkGray
-                index == cau.dapAnDung -> Color(0xFF2E7D32)
-                index == daChon -> Color(0xFFD32F2F)
-                else -> Color.DarkGray
+            val ketQua = when {
+                !daKiemTra -> KetQuaDapAn.CHUA_KIEM_TRA
+                index == cau.dapAnDung -> KetQuaDapAn.DUNG
+                index == daChon -> KetQuaDapAn.SAI
+                else -> KetQuaDapAn.CHUA_KIEM_TRA
             }
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.clickable {
-                    if (!daKiemTra) daChon = index
-                }.padding(vertical = 4.dp),
-            ) {
-                RadioButton(selected = daChon == index, onClick = { if (!daKiemTra) daChon = index })
-                Text(
-                    dapAn,
-                    fontSize = 17.sp,
-                    color = mau,
-                    fontWeight = if (daKiemTra && index == cau.dapAnDung) FontWeight.Bold else FontWeight.Normal,
-                )
-            }
+            TheDapAn(
+                chuCai = "ABCD".getOrElse(index) { '?' }.toString(),
+                noiDung = dapAn,
+                daChon = daChon == index,
+                ketQua = ketQua,
+                bat = !daKiemTra,
+                onClick = { if (!daKiemTra) daChon = index },
+            )
         }
         Spacer(Modifier.height(16.dp))
         if (!daKiemTra) {
@@ -780,12 +801,11 @@ private fun OnTuDoLamScreen(
                 if (daChon == cau.dapAnDung) soDung++
             }
         } else {
-            Text(
-                if (daChon == cau.dapAnDung) "Đúng rồi! Giỏi lắm." else "Chưa đúng. Đáp án đúng là: ${cau.cacDapAn[cau.dapAnDung]}",
-                fontSize = 17.sp,
-                fontWeight = FontWeight.Bold,
-                color = if (daChon == cau.dapAnDung) Color(0xFF2E7D32) else Color(0xFFD32F2F),
-            )
+            if (daChon == cau.dapAnDung) {
+                ThongBaoTot("🎉 Đúng rồi! Giỏi lắm.")
+            } else {
+                ThongBaoLoi("Chưa đúng. Đáp án đúng là: ${cau.cacDapAn[cau.dapAnDung]}")
+            }
             Spacer(Modifier.height(16.dp))
             NutLon(if (chiSo < cauHoi.size - 1) "Câu tiếp theo" else "Xem kết quả") {
                 if (chiSo < cauHoi.size - 1) {

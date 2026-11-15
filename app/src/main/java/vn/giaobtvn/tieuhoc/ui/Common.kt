@@ -30,6 +30,8 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
 import android.util.Base64
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -41,47 +43,51 @@ import vn.giaobtvn.tieuhoc.data.nhanTrangThai
 
 @Composable
 fun TieuDeManHinh(tieuDe: String, phuDe: String = "") {
-    Text(tieuDe, fontSize = 22.sp, fontWeight = FontWeight.Bold)
+    Text(tieuDe, fontSize = 22.sp, fontWeight = FontWeight.ExtraBold, color = Mau.Chu)
     if (phuDe.isNotBlank()) {
         Spacer(Modifier.height(4.dp))
-        Text(phuDe, fontSize = 15.sp, color = Color.Gray)
+        Text(phuDe, fontSize = 15.sp, color = Mau.ChuPhu)
     }
     Spacer(Modifier.height(16.dp))
 }
 
 @Composable
 fun NutLon(text: String, bat: Boolean = true, onClick: () -> Unit) {
-    Button(
+    Nut3D(
+        text = text,
+        mauTren = Mau.XanhSang,
+        mauDuoi = Mau.Xanh,
+        mauMep = Mau.XanhDam,
+        mauChu = Color.White,
+        modifier = Modifier.padding(vertical = 3.dp),
+        bat = bat,
         onClick = onClick,
-        enabled = bat,
-        modifier = Modifier.fillMaxWidth().height(52.dp),
-    ) {
-        Text(text, fontSize = 17.sp)
-    }
+    )
 }
 
 @Composable
 fun NutPhu(text: String, onClick: () -> Unit) {
-    OutlinedButton(
+    Nut3D(
+        text = text,
+        mauTren = Color.White,
+        mauDuoi = Color(0xFFEFF3FC),
+        mauMep = Color(0xFFB9C6E4),
+        mauChu = Mau.XanhDam,
+        modifier = Modifier.padding(vertical = 3.dp),
+        vien = Mau.VienNhat,
+        cao = 50.dp,
+        coChu = 16,
         onClick = onClick,
-        modifier = Modifier.fillMaxWidth().height(52.dp),
-    ) {
-        Text(text, fontSize = 16.sp)
-    }
+    )
 }
 
 @Composable
 fun TheThongTin(tieuDe: String, noiDung: String, onClick: (() -> Unit)? = null) {
-    Card(
-        onClick = onClick ?: {},
-        enabled = onClick != null,
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-    ) {
-        Column(Modifier.padding(16.dp)) {
-            Text(tieuDe, fontSize = 17.sp, fontWeight = FontWeight.Bold)
+    The3D(Modifier.fillMaxWidth().padding(vertical = 6.dp), onClick = onClick) {
+        Column(Modifier.padding(horizontal = 18.dp, vertical = 14.dp)) {
+            Text(tieuDe, fontSize = 17.sp, fontWeight = FontWeight.ExtraBold, color = Mau.Chu)
             Spacer(Modifier.height(4.dp))
-            Text(noiDung, fontSize = 15.sp, color = Color.DarkGray)
+            Text(noiDung, fontSize = 15.sp, color = Mau.ChuPhu)
         }
     }
 }
@@ -96,42 +102,53 @@ fun ManDangTai() {
 @Composable
 fun ThongBaoLoi(thongBao: String) {
     if (thongBao.isNotBlank()) {
-        Spacer(Modifier.height(8.dp))
-        Text(thongBao, color = MaterialTheme.colorScheme.error, fontSize = 15.sp)
+        Spacer(Modifier.height(10.dp))
+        Box(
+            Modifier
+                .fillMaxWidth()
+                .clip(androidx.compose.foundation.shape.RoundedCornerShape(14.dp))
+                .background(Mau.DoNhat)
+                .padding(horizontal = 14.dp, vertical = 10.dp),
+        ) {
+            Text(thongBao, color = Mau.DoDam, fontSize = 15.sp, fontWeight = FontWeight.Medium)
+        }
     }
 }
 
 @Composable
 fun ThongBaoTot(thongBao: String) {
     if (thongBao.isNotBlank()) {
-        Spacer(Modifier.height(8.dp))
-        Text(thongBao, color = Color(0xFF2E7D32), fontSize = 15.sp)
+        Spacer(Modifier.height(10.dp))
+        Box(
+            Modifier
+                .fillMaxWidth()
+                .clip(androidx.compose.foundation.shape.RoundedCornerShape(14.dp))
+                .background(Mau.LucNhat)
+                .padding(horizontal = 14.dp, vertical = 10.dp),
+        ) {
+            Text(thongBao, color = Mau.LucDam, fontSize = 15.sp, fontWeight = FontWeight.Medium)
+        }
     }
 }
 
 @Composable
 fun ChipTrangThai(trangThai: TrangThaiNop) {
     val mau = when (trangThai) {
-        TrangThaiNop.DA_NOP -> Color(0xFF2E7D32)
-        TrangThaiNop.CHUA_NOP -> Color.Gray
-        TrangThaiNop.QUA_HAN -> Color(0xFFD32F2F)
-        TrangThaiNop.CHO_DUYET_TRUNG -> Color(0xFFF57F17)
-        TrangThaiNop.CAN_NOP_LAI -> Color(0xFFD32F2F)
+        TrangThaiNop.DA_NOP -> Mau.LucDam
+        TrangThaiNop.CHUA_NOP -> Mau.ChuPhu
+        TrangThaiNop.QUA_HAN -> Mau.DoDam
+        TrangThaiNop.CHO_DUYET_TRUNG -> Mau.VangDam
+        TrangThaiNop.CAN_NOP_LAI -> Mau.DoDam
     }
-    Text(
-        nhanTrangThai(trangThai),
-        color = mau,
-        fontWeight = FontWeight.Bold,
-        fontSize = 14.sp,
-    )
+    VienThuoc(nhanTrangThai(trangThai), mau)
 }
 
 @Composable
 fun HangChu(label: String, giaTri: String) {
     Row(Modifier.fillMaxWidth().padding(vertical = 2.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-        Text(label, fontSize = 15.sp, color = Color.DarkGray)
+        Text(label, fontSize = 15.sp, color = Mau.ChuPhu)
         Spacer(Modifier.width(8.dp))
-        Text(giaTri, fontSize = 15.sp, fontWeight = FontWeight.Bold)
+        Text(giaTri, fontSize = 15.sp, fontWeight = FontWeight.Bold, color = Mau.Chu)
     }
 }
 
@@ -188,10 +205,22 @@ fun DongHoDemNguoc(thoiGianHetMillis: Long, onHetGio: () -> Unit) {
             delay(1000)
         }
     }
-    Text(
-        "Còn lại: ${dinhDangPhutGiay(conLaiGiay)}",
-        fontSize = 20.sp,
-        fontWeight = FontWeight.Bold,
-        color = if (conLaiGiay <= 60) Color(0xFFD32F2F) else Color(0xFF1565C0),
-    )
+    val gapRut = conLaiGiay <= 60
+    Box(
+        Modifier
+            .clip(androidx.compose.foundation.shape.RoundedCornerShape(50))
+            .background(
+                Brush.verticalGradient(
+                    if (gapRut) listOf(Mau.Do, Mau.DoDam) else listOf(Mau.XanhSang, Mau.XanhDam)
+                )
+            )
+            .padding(horizontal = 18.dp, vertical = 8.dp),
+    ) {
+        Text(
+            "⏱ ${dinhDangPhutGiay(conLaiGiay)}",
+            fontSize = 20.sp,
+            fontWeight = FontWeight.ExtraBold,
+            color = Color.White,
+        )
+    }
 }

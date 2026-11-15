@@ -11,6 +11,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
@@ -57,33 +59,53 @@ fun RoleScreen(onChon: (VaiTro) -> Unit) {
             ),
         )
         Column(
-            Modifier.fillMaxSize().padding(horizontal = 24.dp),
+            Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding().padding(horizontal = 24.dp),
         ) {
-            Spacer(Modifier.height(48.dp))
+            Spacer(Modifier.height(36.dp))
             Text(
                 "Bài tập về nhà",
-                fontSize = 30.sp,
+                fontSize = 34.sp,
                 fontWeight = FontWeight.ExtraBold,
-                color = Color(0xFF0D47A1),
+                color = Mau.XanhDam,
                 textAlign = TextAlign.Center,
                 maxLines = 1,
+                style = androidx.compose.ui.text.TextStyle(
+                    shadow = androidx.compose.ui.graphics.Shadow(
+                        color = Color.White,
+                        offset = androidx.compose.ui.geometry.Offset(0f, 4f),
+                        blurRadius = 10f,
+                    ),
+                ),
+                modifier = Modifier.fillMaxWidth(),
+            )
+            Spacer(Modifier.height(6.dp))
+            Text(
+                "Giao bài · Làm bài · Nhận điểm",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Medium,
+                color = Mau.ChuPhu,
+                textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth(),
             )
             Spacer(Modifier.weight(1f))
             TheChonVai(
                 bieuTuong = "👩‍🏫",
-                mauNenBieuTuong = Color(0xFFE3F2FD),
+                mauTren = Mau.XanhSang,
+                mauDuoi = Mau.XanhDam,
                 tieuDe = "Tôi là giáo viên",
+                phuDe = "Tạo lớp, giao bài, chấm điểm",
                 onClick = { onChon(VaiTro.GIAO_VIEN) },
             )
-            Spacer(Modifier.height(14.dp))
+            Spacer(Modifier.height(18.dp))
             TheChonVai(
                 bieuTuong = "🧒",
-                mauNenBieuTuong = Color(0xFFE0F2F1),
+                mauTren = Color(0xFF4CD08B),
+                mauDuoi = Mau.LucDam,
                 tieuDe = "Tôi là học sinh",
+                phuDe = "Làm bài cô giao, ôn bài tự do",
                 onClick = { onChon(VaiTro.HOC_SINH) },
             )
-            Spacer(Modifier.height(32.dp))
+            Spacer(Modifier.height(36.dp))
         }
     }
 }
@@ -91,40 +113,30 @@ fun RoleScreen(onChon: (VaiTro) -> Unit) {
 @Composable
 private fun TheChonVai(
     bieuTuong: String,
-    mauNenBieuTuong: Color,
+    mauTren: Color,
+    mauDuoi: Color,
     tieuDe: String,
+    phuDe: String,
     onClick: () -> Unit,
 ) {
-    Card(
+    The3D(
+        Modifier.fillMaxWidth(),
+        mauVien = Color.White,
+        mauBong = mauDuoi,
+        nen = Color.White.copy(alpha = 0.93f),
+        bo = 28.dp,
         onClick = onClick,
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.94f)),
-        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
-        modifier = Modifier.fillMaxWidth().height(76.dp),
     ) {
         Row(
-            Modifier.fillMaxSize().padding(horizontal = 20.dp),
+            Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 18.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Box(
-                Modifier.size(52.dp).clip(CircleShape),
-                contentAlignment = Alignment.Center,
-            ) {
-                Card(
-                    shape = CircleShape,
-                    colors = CardDefaults.cardColors(containerColor = mauNenBieuTuong),
-                    modifier = Modifier.fillMaxSize(),
-                ) {}
-                Text(bieuTuong, fontSize = 30.sp)
+            HuyHieuTron(bieuTuong, mauTren, mauDuoi, kichThuoc = 62.dp, coChu = 32)
+            Column(Modifier.weight(1f).padding(start = 16.dp)) {
+                Text(tieuDe, fontSize = 21.sp, fontWeight = FontWeight.ExtraBold, color = Mau.Chu)
+                Text(phuDe, fontSize = 14.sp, color = Mau.ChuPhu)
             }
-            Text(
-                tieuDe,
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF102027),
-                modifier = Modifier.weight(1f).padding(start = 16.dp),
-            )
-            Text("›", fontSize = 28.sp, color = Color(0xFF90A4AE))
+            Text("›", fontSize = 34.sp, fontWeight = FontWeight.Bold, color = mauDuoi)
         }
     }
 }

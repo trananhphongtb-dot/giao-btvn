@@ -324,14 +324,17 @@ fun TheQuanLyLop(
 ) {
     val context = LocalContext.current
     var daSaoChep by remember { mutableStateOf(false) }
-    androidx.compose.material3.Card(
-        colors = androidx.compose.material3.CardDefaults.cardColors(containerColor = Color.White),
-        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-    ) {
-        Column(Modifier.padding(12.dp)) {
-            Text("${lop.tenLop} — Mã: ${lop.maLop}", fontSize = 17.sp, fontWeight = FontWeight.Bold)
-            Text("${lop.hocSinh.size} học sinh đã tham gia", fontSize = 14.sp, color = Color.DarkGray)
-            Spacer(Modifier.height(8.dp))
+    The3D(Modifier.fillMaxWidth().padding(vertical = 6.dp)) {
+        Column(Modifier.padding(16.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                HuyHieuTron("🏫", Mau.XanhSang, Mau.XanhDam, kichThuoc = 46.dp, coChu = 22)
+                Spacer(Modifier.width(12.dp))
+                Column(Modifier.weight(1f)) {
+                    Text(lop.tenLop, fontSize = 18.sp, fontWeight = FontWeight.ExtraBold, color = Mau.Chu)
+                    Text("Mã lớp: ${lop.maLop} · ${lop.hocSinh.size} học sinh", fontSize = 14.sp, color = Mau.ChuPhu)
+                }
+            }
+            Spacer(Modifier.height(10.dp))
             // 3 nút gọn trong đúng 1 hàng, không dãi thành 2 hàng nữa.
             Row(verticalAlignment = Alignment.CenterVertically) {
                 NutNhoNho("Quản lý", onClick = onQuanLy)
@@ -351,24 +354,13 @@ fun TheQuanLyLop(
 
 @Composable
 fun NutNhoQuanLy(text: String, onClick: () -> Unit) {
-    androidx.compose.material3.OutlinedButton(
-        onClick = onClick,
-        modifier = Modifier.padding(end = 8.dp),
-    ) {
-        Text(text, fontSize = 14.sp)
-    }
+    NutNho(text, onClick = onClick)
 }
 
 /** Nút nhỏ gọn cho 1 hàng 3 nút: chữ nhỏ, đệm hẹp, không tràn hàng. */
 @Composable
 fun NutNhoNho(text: String, onClick: () -> Unit) {
-    androidx.compose.material3.OutlinedButton(
-        onClick = onClick,
-        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 10.dp, vertical = 0.dp),
-        modifier = Modifier.padding(end = 6.dp).height(36.dp),
-    ) {
-        Text(text, fontSize = 13.sp)
-    }
+    NutNho(text, onClick = onClick)
 }
 
 @Composable
