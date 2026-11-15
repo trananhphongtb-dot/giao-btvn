@@ -3,14 +3,13 @@
 
     <!-- INTERNET: đồng bộ lớp / bài giao / bài nộp qua Firebase Realtime Database.
          CAMERA: học sinh chụp ảnh bài làm ra giấy.
-         READ_MEDIA_IMAGES: học sinh chọn ảnh bài làm từ thư viện. -->
+         Chọn ảnh từ thư viện dùng bộ chọn của hệ thống nên không cần quyền đọc ảnh. -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.CAMERA" />
-    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <application
-        android:allowBackup="true"
+        android:allowBackup="false"
         android:icon="@mipmap/ic_launcher"
         android:roundIcon="@mipmap/ic_launcher"
         android:label="@string/app_name"

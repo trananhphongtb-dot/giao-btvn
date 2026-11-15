@@ -18,7 +18,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import vn.giaobtvn.tieuhoc.data.BaiGiao
+import vn.giaobtvn.tieuhoc.data.DangNhapAnDanh
 import vn.giaobtvn.tieuhoc.data.DangNhapGoogle
+import vn.giaobtvn.tieuhoc.ui.NutLon
+import vn.giaobtvn.tieuhoc.ui.NutPhu
+import vn.giaobtvn.tieuhoc.ui.ThongBaoLoi
 import vn.giaobtvn.tieuhoc.data.FirebaseRepository
 import vn.giaobtvn.tieuhoc.data.LocalPrefs
 import vn.giaobtvn.tieuhoc.data.QuestionBank
@@ -65,13 +69,8 @@ private sealed class HocSinhRoute {
 }
 
 class MainActivity : ComponentActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        enableEdgeToEdge()
-        super.onCreate(savedInstanceState)
-        val prefs = LocalPrefs(this)
-        val repo = FirebaseRepository()
-        // Kiểm tra hộp thư định kỳ khi app đóng (tối đa 15 phút/lần
-        // theo giới hạn Android) + lưu FCM token để gửi đẩy được.
+    /** Bật kiểm tra hộp thư định kỳ và lưu FCM token cho học sinh (uid ẩn danh). */
+    private fun khoiDongThongBaoHocSinh(uid: String) {
         try {
             val yeuCau = PeriodicWorkRequestBuilder<ThongBaoWorker>(15, TimeUnit.MINUTES).build()
             WorkManager.getInstance(this).enqueueUniquePeriodicWork(
@@ -82,13 +81,19 @@ class MainActivity : ComponentActivity() {
         }
         try {
             FirebaseMessaging.getInstance().token.addOnSuccessListener { token ->
-                val root = FirebaseDatabase.getInstance().reference
-                if (prefs.hocSinhId.isNotBlank()) {
-                    root.child("fcmTokens").child(prefs.hocSinhId).setValue(token)
-                }
+                FirebaseDatabase.getInstance().reference.child("fcmTokens").child(uid).setValue(token)
             }
         } catch (e: Exception) {
         }
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        enableEdgeToEdge()
+        super.onCreate(savedInstanceState)
+        val prefs = LocalPrefs(this)
+        val repo = FirebaseRepository()
+        // Kiểm tra hộp thư định kỳ khi app đóng và lưu FCM token chỉ làm SAU khi
+        // học sinh đã đăng nhập ẩn danh (hocSinhId = uid), xem khoiDongThongBaoHocSinh.
 
         setContent {
             GiaoBtvnTheme {
@@ -105,6 +110,28 @@ class MainActivity : ComponentActivity() {
                 var hocSinhRoute by remember { mutableStateOf<HocSinhRoute>(HocSinhRoute.Home) }
                 var bank by remember { mutableStateOf<QuestionBank?>(null) }
                 var loiBank by remember { mutableStateOf("") }
+                // Học sinh phải đăng nhập ẩn danh xong mới vào được các màn hình,
+                // vì hocSinhId chính là uid Firebase (quy tắc Database dựa vào đó).
+                var hocSinhSanSang by remember { mutableStateOf(false) }
+                var loiAnDanh by remember { mutableStateOf("") }
+                var lanThuLai by remember { mutableStateOf(0) }
+                LaunchedEffect(vaiTro, lanThuLai) {
+                    if (vaiTro == VaiTro.HOC_SINH) {
+                        hocSinhSanSang = false
+                        loiAnDanh = ""
+                        DangNhapAnDanh.damBao()
+                            .onSuccess { uid ->
+                                if (prefs.hocSinhId != uid) {
+                                    // uid mới: tên và lớp đã lưu thuộc id cũ nên bỏ đi.
+                                    prefs.hocSinhId = uid
+                                    prefs.roiLop()
+                                }
+                                khoiDongThongBaoHocSinh(uid)
+                                hocSinhSanSang = true
+                            }
+                            .onFailure { loiAnDanh = it.message ?: "Không kết nối được" }
+                    }
+                }
 
                 LaunchedEffect(Unit) {
                     try {
@@ -127,6 +154,12 @@ class MainActivity : ComponentActivity() {
                 }
 
                 fun chonVai(vai: VaiTro) {
+                    // Cô và học sinh dùng 2 loại tài khoản khác nhau trên cùng 1 máy.
+                    if (vai == VaiTro.GIAO_VIEN &&
+                        com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.isAnonymous == true
+                    ) {
+                        com.google.firebase.auth.FirebaseAuth.getInstance().signOut()
+                    }
                     prefs.vaiTro = vai.name
                     vaiTro = vai
                     giaoVienRoute = GiaoVienRoute.Home
@@ -279,7 +312,13 @@ class MainActivity : ComponentActivity() {
                         }
                     }
                     VaiTro.HOC_SINH -> {
-                        if (bankHienTai == null && loiBank.isBlank()) {
+                        if (loiAnDanh.isNotBlank()) {
+                            vn.giaobtvn.tieuhoc.ui.CanhDoc {
+                                ThongBaoLoi(loiAnDanh)
+                                NutLon("Thử lại") { lanThuLai++ }
+                                NutPhu("Đổi vai") { doiVai() }
+                            }
+                        } else if (!hocSinhSanSang || (bankHienTai == null && loiBank.isBlank())) {
                             ManDangTai()
                         } else {
                             val bankDung = bankHienTai ?: QuestionBank(emptyList())

@@ -29,12 +29,20 @@ class ThongBaoWorker(appContext: Context, params: WorkerParameters) : CoroutineW
             val prefs = applicationContext.getSharedPreferences("giao_btvn", Context.MODE_PRIVATE)
             val hocSinhId = prefs.getString("hoc_sinh_id", "") ?: ""
             if (hocSinhId.isBlank()) return Result.success()
+            // Quy tắc Database chỉ cho đọc hộp thư khi đúng uid ẩn danh của em này.
+            if (com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid != hocSinhId) {
+                return Result.success()
+            }
+            // Mỗi thông báo chỉ hiện 1 lần, nhớ id những thông báo đã hiện.
+            val daBao = prefs.getStringSet("da_bao_thong_bao", emptySet())?.toMutableSet() ?: mutableSetOf()
             val snap = FirebaseDatabase.getInstance().reference
                 .child("thongBao").child(hocSinhId).get().await()
             var dem = 0
             snap.children.forEach { child ->
                 val daDoc = child.child("daDoc").getValue(Boolean::class.java) ?: false
-                if (!daDoc) {
+                val key = child.key ?: ""
+                if (!daDoc && key.isNotBlank() && key !in daBao) {
+                    daBao.add(key)
                     val tieuDe = child.child("tieuDe").getValue(String::class.java) ?: "Bài tập về nhà mới"
                     val noiDung = child.child("noiDung").getValue(String::class.java) ?: "Mở app để xem bài cô giao."
                     hienThongBaoHeThong(
@@ -44,6 +52,8 @@ class ThongBaoWorker(appContext: Context, params: WorkerParameters) : CoroutineW
                     dem++
                 }
             }
+            // Giữ tối đa 200 id gần nhất để không phình dữ liệu.
+            prefs.edit().putStringSet("da_bao_thong_bao", daBao.toList().takeLast(200).toSet()).apply()
             return Result.success()
         } catch (e: Exception) {
             return Result.success()

@@ -112,7 +112,39 @@ object DangNhapGoogle {
 
     fun giaoVienHienTai(): GiaoVienDaDangNhap? {
         val user = FirebaseAuth.getInstance().currentUser ?: return null
+        // Tài khoản ẩn danh là của học sinh, không được coi là giáo viên đã đăng nhập.
+        if (user.isAnonymous) return null
         return GiaoVienDaDangNhap(user.uid, user.displayName ?: "Giáo viên", user.email ?: "")
+    }
+}
+
+// ============================================================================
+// ĐĂNG NHẬP ẨN DANH CHO HỌC SINH — học sinh vẫn không cần tài khoản Google,
+// nhưng mỗi máy có một uid Firebase riêng. uid này chính là hocSinhId, để
+// quy tắc Realtime Database (database.rules.json) biết "bài của em nào"
+// và không cho em này sửa bài, xem bài, đọc thông báo của em khác.
+// ============================================================================
+
+object DangNhapAnDanh {
+    /**
+     * Bảo đảm máy đang đăng nhập ẩn danh và trả về uid. Nếu máy đang đăng nhập
+     * bằng tài khoản Google của giáo viên (cùng máy đổi vai) thì đăng xuất
+     * trước, vì học sinh không được dùng uid của cô.
+     */
+    suspend fun damBao(): Result<String> {
+        return try {
+            val auth = FirebaseAuth.getInstance()
+            val hienTai = auth.currentUser
+            if (hienTai != null && hienTai.isAnonymous) return Result.success(hienTai.uid)
+            if (hienTai != null) auth.signOut()
+            val res = auth.signInAnonymously().await()
+            val uid = res.user?.uid ?: return Result.failure(Exception("Không tạo được phiên làm bài"))
+            Result.success(uid)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Result.failure(Exception("Không kết nối được, kiểm tra mạng rồi thử lại"))
+        }
     }
 }
 
@@ -126,6 +158,8 @@ interface GiaoBtvnRepository {
     suspend fun layLopCuaGiaoVien(giaoVienId: String): Result<List<LopHoc>>
     suspend fun layLopTheoMa(maLop: String): Result<LopHoc>
     suspend fun thamGiaLop(maLop: String, hocSinhId: String, tenHocSinh: String): Result<LopHoc>
+    /** Học sinh rời lớp: xóa tên mình khỏi danh sách lớp, cô không còn thấy em nữa. */
+    suspend fun roiLop(maLop: String, hocSinhId: String): Result<Unit>
     suspend fun taoBaiGiao(maLop: String, baiGiao: BaiGiao): Result<BaiGiao>
     suspend fun layBaiGiaoTheoLop(maLop: String): Result<List<BaiGiao>>
     suspend fun layBaiNopTheoBaiGiao(baiGiaoId: String): Result<Map<String, BaiNop>>
@@ -206,11 +240,12 @@ class FirebaseRepository : GiaoBtvnRepository {
             var maLop = taoMaLop()
             var lanThu = 0
             // Mã lớp phải duy nhất: trùng thì sinh mã khác, tối đa 10 lần.
-            while (lanThu < 10) {
+            while (true) {
                 val daCo = classesRef.child(maLop).get().await().exists()
                 if (!daCo) break
-                maLop = taoMaLop()
                 lanThu++
+                if (lanThu >= 10) throw Exception("Không tạo được mã lớp mới, hãy thử lại")
+                maLop = taoMaLop()
             }
             val lop = LopHoc(maLop, tenLop.trim(), giaoVien.uid, giaoVien.ten, emptyMap())
             classesRef.child(maLop).setValue(lop.toMap()).await()
@@ -275,10 +310,22 @@ class FirebaseRepository : GiaoBtvnRepository {
             lop.copy(hocSinh = lop.hocSinh + (hocSinhId to tenHocSinh.trim()))
         }
 
+    override suspend fun roiLop(maLop: String, hocSinhId: String): Result<Unit> =
+        anToan {
+            classesRef.child(chuanHoaMaLop(maLop)).child("hocSinh").child(hocSinhId).removeValue().await()
+        }
+
     override suspend fun taoBaiGiao(maLop: String, baiGiao: BaiGiao): Result<BaiGiao> =
         anToan {
             val id = assignmentsRef.child(maLop).push().key ?: throw Exception("Không tạo được mã bài giao")
             val bai = baiGiao.copy(id = id)
+            // assignmentMeta/{baiGiaoId}: ai giao, cho lớp nào, loại gì. Quy tắc
+            // Database dùng nút này để cho đúng cô chấm bài và đúng học sinh nộp bài.
+            val giaoVienUid = FirebaseAuth.getInstance().currentUser?.uid
+                ?: throw Exception("Cô cần đăng nhập Google để giao bài")
+            root.child("assignmentMeta").child(id).setValue(
+                mapOf("giaoVienId" to giaoVienUid, "maLop" to maLop, "loai" to bai.loai)
+            ).await()
             assignmentsRef.child(maLop).child(id).setValue(bai.toMap()).await()
             // Thông báo bài mới cho mọi học sinh trong lớp. Ghi hộp thư
             // là bước phụ: lỗi ở đây không được làm hỏng việc giao bài.

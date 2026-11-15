@@ -1,4 +1,31 @@
-# Giao Bài Tập Về Nhà — V1 (code local, chưa build, chưa push)
+# Giao Bài Tập Về Nhà
+
+> **Cập nhật 2026-11-16 (nhánh `bao-mat-va-sua-loi`)**: học sinh đăng nhập
+> ẩn danh Firebase (uid = `hocSinhId`), có `database.rules.json` thay cho chế độ
+> test, sửa các lỗi chấm điểm / thông báo / nộp ảnh. Phần mô tả bên dưới là
+> thiết kế V1, vẫn đúng về luồng dùng. Mục "3 thứ còn thiếu để build" đã cũ:
+> repo đã có `google-services.json` và đã build được.
+
+## Thứ tự đưa lên dùng thật (bắt buộc)
+
+1. Firebase Console → Authentication → Sign-in method → bật **Anonymous**.
+2. Build APK từ nhánh này, cài thử 1 máy cô (Google) và 1 máy học sinh.
+3. Realtime Database → tab **Rules** → dán nội dung `database.rules.json`
+   → Publish. (Chế độ test cũ hết hạn 30/11/2026 và đang mở cho mọi người.)
+4. Xóa dữ liệu thử cũ trong Data (bài giao cũ chưa có `assignmentMeta` nên
+   không nộp được bài nữa).
+5. Thêm SHA-1 của **Play App Signing** vào Firebase (Project settings →
+   app Android) trước khi cho cài từ Play, nếu không đăng nhập Google lỗi.
+
+## Giới hạn đã biết sau bản này
+
+- Điểm trắc nghiệm vẫn do máy học sinh tự tính (rules chỉ chặn điểm ngoài
+  0–10 và chặn làm lại). Muốn chống gian lận thật phải chấm phía máy chủ
+  (Cloud Functions, cần gói Blaze).
+- Ảnh bài làm vẫn lưu Base64 trong Database (gói Spark chưa dùng được Storage).
+- Đổi máy = học sinh mới (uid ẩn danh gắn với máy / lần cài).
+
+## Thiết kế V1
 
 App giao bài tập về nhà cho tiểu học, UI tiếng Việt, không quảng cáo,
 không chat tự do. V1 chỉ có 2 vai, **không có vai phụ huynh**.

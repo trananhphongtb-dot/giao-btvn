@@ -172,9 +172,15 @@ fun StudentHomeScreen(
             NutLon("Xem bài cô giao", onClick = onXemBai)
             Spacer(Modifier.height(8.dp))
             NutPhu("Rời lớp này") {
-                prefs.roiLop()
-                lop = null
-                maLopNhap = ""
+                val maCu = prefs.maLop
+                scope.launch {
+                    // Xóa tên em khỏi danh sách lớp để cô không còn thấy em nữa.
+                    // Lỗi mạng thì vẫn rời lớp trên máy, lần sau vào lại sẽ ghi đè.
+                    repo.roiLop(maCu, prefs.hocSinhId)
+                    prefs.roiLop()
+                    lop = null
+                    maLopNhap = ""
+                }
             }
         }
         Spacer(Modifier.height(16.dp))
@@ -345,7 +351,7 @@ fun LamTracNghiemScreen(
             diemKetQua != null -> {
                 Text("Bạn đã nộp bài!", fontSize = 18.sp, fontWeight = FontWeight.Bold)
                 Text("Điểm của bạn: $diemKetQua / 10", fontSize = 22.sp)
-                Text("Số câu đúng: ${(diemKetQua * cauGoc.size / 10).toInt()} / ${cauGoc.size}")
+                Text("Số câu đúng: ${kotlin.math.round(diemKetQua * cauGoc.size / 10.0).toInt()} / ${cauGoc.size}")
                 Spacer(Modifier.height(16.dp))
                 NutLon("Về danh sách bài", onClick = onXong)
             }
@@ -435,8 +441,8 @@ fun NopBaiGiayScreen(
     var dangNop by remember { mutableStateOf(false) }
 
     val chonTuThuVien = rememberLauncherForActivityResult(ActivityResultContracts.GetMultipleContents()) { uris ->
+        if (anhUris.size + uris.size > 3) loi = "Mỗi bài chỉ nộp tối đa 3 ảnh"
         anhUris = (anhUris + uris).take(3)
-        if (uris.size + anhUris.size > 3) loi = "Mỗi bài chỉ nộp tối đa 3 ảnh"
     }
     val chupAnh = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { thanhCong ->
         val uri = anhChupUri
@@ -530,14 +536,17 @@ fun NopBaiGiayScreen(
                     val anhBase64 = mutableListOf<String>()
                     val hashList = mutableListOf<String>()
                     var loiDocAnh = false
-                    for (uri in anhUris) {
-                        val bitmap = giaiMaAnhTuUri(context, uri)
-                        if (bitmap == null) {
-                            loiDocAnh = true
-                            break
+                    // Giải mã và nén ảnh nặng, chạy ở luồng nền để không đứng hình.
+                    kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
+                        for (uri in anhUris) {
+                            val bitmap = giaiMaAnhTuUri(context, uri)
+                            if (bitmap == null) {
+                                loiDocAnh = true
+                                break
+                            }
+                            anhBase64.add(nenAnhBase64(bitmap))
+                            hashList.add(tinhAHash(bitmap))
                         }
-                        anhBase64.add(nenAnhBase64(bitmap))
-                        hashList.add(tinhAHash(bitmap))
                     }
                     if (loiDocAnh) {
                         loi = "Có ảnh không đọc được, hãy chọn lại ảnh khác"

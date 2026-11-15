@@ -1,0 +1,73 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "classes": {
+      "$maLop": {
+        ".read": "auth != null",
+        ".write": "auth != null && auth.token.firebase.sign_in_provider != 'anonymous' && ((!data.exists() && newData.child('giaoVienId').val() == auth.uid) || (data.exists() && data.child('giaoVienId').val() == auth.uid && newData.child('giaoVienId').val() == data.child('giaoVienId').val()))",
+        "hocSinh": {
+          "$hocSinhId": {
+            ".write": "auth != null && auth.uid == $hocSinhId && root.child('classes').child($maLop).child('giaoVienId').exists() && (!newData.exists() || (newData.isString() && newData.val().length > 0 && newData.val().length <= 60))"
+          }
+        }
+      }
+    },
+    "teacherClasses": {
+      "$uid": {
+        ".read": "auth != null && auth.token.firebase.sign_in_provider != 'anonymous' && auth.uid == $uid",
+        ".write": "auth != null && auth.token.firebase.sign_in_provider != 'anonymous' && auth.uid == $uid"
+      }
+    },
+    "assignmentMeta": {
+      "$baiId": {
+        ".read": false,
+        ".write": "auth != null && auth.token.firebase.sign_in_provider != 'anonymous' && !data.exists() && newData.child('giaoVienId').val() == auth.uid && (newData.child('loai').val() == 'GIAY' || newData.child('loai').val() == 'TRAC_NGHIEM') && root.child('classes').child(newData.child('maLop').val()).child('giaoVienId').val() == auth.uid"
+      }
+    },
+    "assignments": {
+      "$maLop": {
+        ".read": "auth != null && (root.child('classes').child($maLop).child('hocSinh').child(auth.uid).exists() || root.child('classes').child($maLop).child('giaoVienId').val() == auth.uid)",
+        ".write": "auth != null && auth.token.firebase.sign_in_provider != 'anonymous' && root.child('classes').child($maLop).child('giaoVienId').val() == auth.uid"
+      }
+    },
+    "submissions": {
+      "$baiId": {
+        ".read": "auth != null && auth.token.firebase.sign_in_provider != 'anonymous' && root.child('assignmentMeta').child($baiId).child('giaoVienId').val() == auth.uid",
+        "$hocSinhId": {
+          ".read": "auth != null && auth.uid == $hocSinhId",
+          ".write": "(auth != null && auth.token.firebase.sign_in_provider != 'anonymous' && root.child('assignmentMeta').child($baiId).child('giaoVienId').val() == auth.uid) || (auth != null && auth.uid == $hocSinhId && newData.exists() && root.child('classes').child(root.child('assignmentMeta').child($baiId).child('maLop').val()).child('hocSinh').child(auth.uid).exists() && newData.child('hocSinhId').val() == $hocSinhId && newData.child('trangThai').val() == 'DA_NOP' && newData.child('canhBaoTrung').val() != true && (!newData.child('ghiChuGiaoVien').exists() || newData.child('ghiChuGiaoVien').val() == '') && (root.child('assignmentMeta').child($baiId).child('loai').val() == 'TRAC_NGHIEM' ? (!data.exists() && newData.child('diem').val() >= 0 && newData.child('diem').val() <= 10) : ((!data.exists() || data.child('trangThai').val() == 'YEU_CAU_NOP_LAI') && !newData.child('diem').exists())))"
+        }
+      }
+    },
+    "thongBao": {
+      "$hocSinhId": {
+        ".read": "auth != null && auth.uid == $hocSinhId",
+        "$tbId": {
+          ".write": "auth != null && auth.token.firebase.sign_in_provider != 'anonymous' && !data.exists() && newData.exists() && root.child('classes').child(newData.child('maLop').val()).child('giaoVienId').val() == auth.uid && root.child('classes').child(newData.child('maLop').val()).child('hocSinh').child($hocSinhId).exists()",
+          "daDoc": {
+            ".write": "auth != null && auth.uid == $hocSinhId && newData.isBoolean()"
+          }
+        }
+      }
+    },
+    "fcmTokens": {
+      "$uid": {
+        ".read": false,
+        ".write": "auth != null && auth.uid == $uid"
+      }
+    },
+    "teacherQuestions": {
+      "$uid": {
+        ".read": "auth != null && auth.token.firebase.sign_in_provider != 'anonymous' && auth.uid == $uid",
+        ".write": "auth != null && auth.token.firebase.sign_in_provider != 'anonymous' && auth.uid == $uid"
+      }
+    },
+    "nganHangChung": {
+      ".read": "auth != null",
+      "$qid": {
+        ".write": "auth != null && auth.token.firebase.sign_in_provider != 'anonymous' && (newData.exists() ? (newData.child('giaoVienId').val() == auth.uid && (!data.exists() || data.child('giaoVienId').val() == auth.uid)) : data.child('giaoVienId').val() == auth.uid)"
+      }
+    }
+  }
+}

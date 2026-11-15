@@ -286,8 +286,9 @@ fun tinhThongKe(
         nop?.diem?.let { diemMap[hocSinhId] = it }
         if (nop != null && dapAnDung.isNotEmpty()) {
             for ((cauId, dapAnDungCuaCau) in dapAnDung) {
+                // Câu bỏ trống cũng tính là sai, giống lúc chấm điểm thang 10.
                 val daChon = nop.dapAn[cauId]
-                if (daChon != null && daChon != dapAnDungCuaCau) {
+                if (daChon != dapAnDungCuaCau) {
                     saiMap[cauId] = (saiMap[cauId] ?: 0) + 1
                 }
             }

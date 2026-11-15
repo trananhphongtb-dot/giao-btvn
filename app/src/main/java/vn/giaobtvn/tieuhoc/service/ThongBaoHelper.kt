@@ -23,7 +23,8 @@ fun hienThongBaoHeThong(context: Context, tieuDe: String, noiDung: String, idTho
             quanLy.createNotificationChannel(kenh)
         }
         val intent = Intent(context, MainActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            // Không dùng CLEAR_TASK: bấm thông báo không được đóng bài đang làm dở.
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
         }
         val pending = PendingIntent.getActivity(
             context, 0, intent,
