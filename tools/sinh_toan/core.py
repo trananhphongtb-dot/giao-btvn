@@ -165,11 +165,11 @@ def chon3(rng, ds, dung):
 
 
 # ------------------------------------------------------------------ dựng chủ đề
-def build(lop, stt, ten_bai, mcs, tls, seed, n_mc=20, n_tl=10):
+def build(lop, stt, ten_bai, mcs, tls, seed, n_mc=20, n_tl=10, mon="Toán", pre="T", khoa_dap_an=False):
     rng = random.Random(seed)
     tn, seen = [], set()
     i = tries = 0
-    while len(tn) < n_mc and tries < 6000:
+    while len(tn) < n_mc and tries < 6000 and mcs:
         fn = mcs[i % len(mcs)]
         i += 1
         tries += 1
@@ -178,12 +178,13 @@ def build(lop, stt, ten_bai, mcs, tls, seed, n_mc=20, n_tl=10):
         except ValueError:
             continue
         _, q, dung, sai, kho = it
-        if q in seen:
+        khoa = (q, dung) if khoa_dap_an else q
+        if khoa in seen:
             continue
         opts = list(dict.fromkeys([dung] + sai))
         if len(opts) != 4:
             continue
-        seen.add(q)
+        seen.add(khoa)
         rng.shuffle(opts)
         tn.append(dict(noi_dung=q, cac_dap_an=opts, dap_an_dung=opts.index(dung), do_kho=kho))
     if len(tn) < n_mc:
@@ -207,9 +208,9 @@ def build(lop, stt, ten_bai, mcs, tls, seed, n_mc=20, n_tl=10):
         raise RuntimeError(f"Lớp {lop} bài {stt} '{ten_bai}': chỉ sinh được {len(tl)}/{n_tl} tự luận")
     tn.sort(key=lambda x: x["do_kho"])
     tl.sort(key=lambda x: x["do_kho"])
-    chu_de = f"Toán lớp {lop}"
+    chu_de = f"{mon} lớp {lop}"
     for k, x in enumerate(tn, 1):
-        x.update(id=f"T{lop}-{stt:02d}-TN-{k:02d}", chu_de=chu_de, bai=ten_bai, mon="Toán", lop=lop)
+        x.update(id=f"{pre}{lop}-{stt:02d}-TN-{k:02d}", chu_de=chu_de, bai=ten_bai, mon=mon, lop=lop)
     for k, x in enumerate(tl, 1):
-        x.update(id=f"T{lop}-{stt:02d}-TL-{k:02d}", chu_de=chu_de, bai=ten_bai, mon="Toán", lop=lop)
+        x.update(id=f"{pre}{lop}-{stt:02d}-TL-{k:02d}", chu_de=chu_de, bai=ten_bai, mon=mon, lop=lop)
     return tn, tl

@@ -22,14 +22,16 @@ class QuestionBank(val cauHoi: List<CauHoi>) {
         fun load(context: Context): QuestionBank {
             val text = context.assets.open("cau_hoi.json").bufferedReader().use { it.readText() }
             val goc = fromJson(text)
-            // Ngân hàng Toán lớp 1–5 (mỗi chủ đề 20 câu trắc nghiệm) nằm file riêng;
-            // thiếu hoặc lỗi file này thì vẫn dùng được ngân hàng gốc.
-            val toan = try {
-                fromJson(context.assets.open("cau_hoi_toan_tieu_hoc.json").bufferedReader().use { it.readText() })
-            } catch (e: Exception) {
-                QuestionBank(emptyList())
+            // Ngân hàng Toán và Tiếng Việt lớp 1–5 (mỗi chủ đề 20 câu trắc nghiệm) nằm file riêng;
+            // thiếu hoặc lỗi file nào thì file đó bị bỏ qua, ngân hàng gốc vẫn dùng được.
+            val them = listOf("cau_hoi_toan_tieu_hoc.json", "cau_hoi_tieng_viet.json").flatMap { f ->
+                try {
+                    fromJson(context.assets.open(f).bufferedReader().use { it.readText() }).cauHoi
+                } catch (e: Exception) {
+                    emptyList()
+                }
             }
-            return QuestionBank(goc.cauHoi + toan.cauHoi)
+            return QuestionBank(goc.cauHoi + them)
         }
 
         /**

@@ -723,6 +723,7 @@ fun TaoBaiGiayScreen(
     // Chọn đề từ ngân hàng tự luận (Toán lớp 1–5): mã câu lưu vào bài giao để
     // lúc chấm hiện lời giải gợi ý; học sinh chỉ thấy phần đề cô đã đưa vào nội dung.
     val tuLuanBank = remember { TuLuanBank.load(context) }
+    var monTL by remember { mutableStateOf("Toán") }
     var lopTL by remember { mutableStateOf(0) }
     var baiTL by remember { mutableStateOf("Tất cả") }
     var soCauTL by remember { mutableStateOf(3) }
@@ -747,24 +748,32 @@ fun TaoBaiGiayScreen(
         Spacer(Modifier.height(8.dp))
         if (tuLuanBank.cau.isNotEmpty()) {
             Spacer(Modifier.height(12.dp))
-            Text("Lấy đề từ ngân hàng Toán", fontSize = 17.sp, fontWeight = FontWeight.Bold)
-            NhomChon("Lớp", listOf("Không dùng") + tuLuanBank.cacLop().map { "Lớp $it" }, if (lopTL == 0) "Không dùng" else "Lớp $lopTL") { ten ->
+            Text("Lấy đề từ ngân hàng $monTL", fontSize = 17.sp, fontWeight = FontWeight.Bold)
+            if (tuLuanBank.cacMon().size > 1) {
+                NhomChon("Môn", tuLuanBank.cacMon(), monTL) {
+                    monTL = it
+                    lopTL = 0
+                    baiTL = "Tất cả"
+                    idsTL = emptyList()
+                }
+            }
+            NhomChon("Lớp", listOf("Không dùng") + tuLuanBank.cacLop(monTL).map { "Lớp $it" }, if (lopTL == 0) "Không dùng" else "Lớp $lopTL") { ten ->
                 lopTL = ten.removePrefix("Lớp ").toIntOrNull() ?: 0
                 baiTL = "Tất cả"
                 idsTL = emptyList()
             }
             if (lopTL != 0) {
-                NhomChon("Bài", listOf("Tất cả") + tuLuanBank.cacBai(lopTL), baiTL) { baiTL = it }
+                NhomChon("Bài", listOf("Tất cả") + tuLuanBank.cacBai(monTL, lopTL), baiTL) { baiTL = it }
                 NhomChon("Số câu", listOf(1, 2, 3, 5, 8, 10).map { "$it câu" }, "$soCauTL câu") {
                     soCauTL = it.removeSuffix(" câu").toInt()
                 }
-                val ds = tuLuanBank.loc(lopTL, baiTL)
+                val ds = tuLuanBank.loc(monTL, lopTL, baiTL)
                 NutPhu("Chọn ngẫu nhiên ${minOf(soCauTL, ds.size)} câu (${ds.size} câu có sẵn)") {
                     if (ds.isEmpty()) return@NutPhu
                     val chon = tuLuanBank.layNgauNhien(ds, soCauTL)
                     idsTL = chon.map { it.id }
                     noiDung = chon.mapIndexed { i, c -> "Câu ${i + 1}. ${c.de}" }.joinToString("\n\n")
-                    if (tieuDe.isBlank()) tieuDe = "Toán lớp $lopTL" + if (baiTL != "Tất cả") ": $baiTL" else ""
+                    if (tieuDe.isBlank()) tieuDe = "$monTL lớp $lopTL" + if (baiTL != "Tất cả") ": $baiTL" else ""
                     thongBao = "Đã điền ${chon.size} câu vào đề bài, cô có thể sửa lại"
                 }
             }
