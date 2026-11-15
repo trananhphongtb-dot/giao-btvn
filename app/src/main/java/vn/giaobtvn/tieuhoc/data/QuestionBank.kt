@@ -21,7 +21,15 @@ class QuestionBank(val cauHoi: List<CauHoi>) {
     companion object {
         fun load(context: Context): QuestionBank {
             val text = context.assets.open("cau_hoi.json").bufferedReader().use { it.readText() }
-            return fromJson(text)
+            val goc = fromJson(text)
+            // Ngân hàng Toán lớp 1–5 (mỗi chủ đề 20 câu trắc nghiệm) nằm file riêng;
+            // thiếu hoặc lỗi file này thì vẫn dùng được ngân hàng gốc.
+            val toan = try {
+                fromJson(context.assets.open("cau_hoi_toan_tieu_hoc.json").bufferedReader().use { it.readText() })
+            } catch (e: Exception) {
+                QuestionBank(emptyList())
+            }
+            return QuestionBank(goc.cauHoi + toan.cauHoi)
         }
 
         /**

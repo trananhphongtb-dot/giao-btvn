@@ -43,6 +43,7 @@ import java.util.Locale
 import kotlinx.coroutines.launch
 import vn.giaobtvn.tieuhoc.data.BaiGiao
 import vn.giaobtvn.tieuhoc.data.BaiNop
+import vn.giaobtvn.tieuhoc.data.TuLuanBank
 import vn.giaobtvn.tieuhoc.data.CauHoi
 import vn.giaobtvn.tieuhoc.data.DangNhapGoogle
 import vn.giaobtvn.tieuhoc.data.GiaoBtvnRepository
@@ -719,6 +720,14 @@ fun TaoBaiGiayScreen(
     var loi by remember { mutableStateOf("") }
     var thongBao by remember { mutableStateOf("") }
 
+    // Chọn đề từ ngân hàng tự luận (Toán lớp 1–5): mã câu lưu vào bài giao để
+    // lúc chấm hiện lời giải gợi ý; học sinh chỉ thấy phần đề cô đã đưa vào nội dung.
+    val tuLuanBank = remember { TuLuanBank.load(context) }
+    var lopTL by remember { mutableStateOf(0) }
+    var baiTL by remember { mutableStateOf("Tất cả") }
+    var soCauTL by remember { mutableStateOf(3) }
+    var idsTL by remember { mutableStateOf<List<String>>(emptyList()) }
+
     val chonAnh = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         if (uri == null) return@rememberLauncherForActivityResult
         val bitmap = giaiMaAnhTuUri(context, uri)
@@ -736,6 +745,31 @@ fun TaoBaiGiayScreen(
         Spacer(Modifier.height(8.dp))
         OutlinedTextField(noiDung, { noiDung = it }, label = { Text("Nội dung đề bài") }, modifier = Modifier.fillMaxWidth(), minLines = 3)
         Spacer(Modifier.height(8.dp))
+        if (tuLuanBank.cau.isNotEmpty()) {
+            Spacer(Modifier.height(12.dp))
+            Text("Lấy đề từ ngân hàng Toán", fontSize = 17.sp, fontWeight = FontWeight.Bold)
+            NhomChon("Lớp", listOf("Không dùng") + tuLuanBank.cacLop().map { "Lớp $it" }, if (lopTL == 0) "Không dùng" else "Lớp $lopTL") { ten ->
+                lopTL = ten.removePrefix("Lớp ").toIntOrNull() ?: 0
+                baiTL = "Tất cả"
+                idsTL = emptyList()
+            }
+            if (lopTL != 0) {
+                NhomChon("Bài", listOf("Tất cả") + tuLuanBank.cacBai(lopTL), baiTL) { baiTL = it }
+                NhomChon("Số câu", listOf(1, 2, 3, 5, 8, 10).map { "$it câu" }, "$soCauTL câu") {
+                    soCauTL = it.removeSuffix(" câu").toInt()
+                }
+                val ds = tuLuanBank.loc(lopTL, baiTL)
+                NutPhu("Chọn ngẫu nhiên ${minOf(soCauTL, ds.size)} câu (${ds.size} câu có sẵn)") {
+                    if (ds.isEmpty()) return@NutPhu
+                    val chon = tuLuanBank.layNgauNhien(ds, soCauTL)
+                    idsTL = chon.map { it.id }
+                    noiDung = chon.mapIndexed { i, c -> "Câu ${i + 1}. ${c.de}" }.joinToString("\n\n")
+                    if (tieuDe.isBlank()) tieuDe = "Toán lớp $lopTL" + if (baiTL != "Tất cả") ": $baiTL" else ""
+                    thongBao = "Đã điền ${chon.size} câu vào đề bài, cô có thể sửa lại"
+                }
+            }
+        }
+        Spacer(Modifier.height(12.dp))
         ChonHanNop(ngay = ngay, gio = gio, onNgay = { ngay = it }, onGio = { gio = it })
         Spacer(Modifier.height(12.dp))
         NutPhu(if (anhDeBase64.isBlank()) "Chọn ảnh đề (không bắt buộc)" else "Đổi ảnh đề") {
@@ -759,7 +793,7 @@ fun TaoBaiGiayScreen(
             scope.launch {
                 repo.taoBaiGiao(
                     maLop,
-                    BaiGiao(loai = "GIAY", tieuDe = tieuDe.trim(), noiDung = noiDung.trim(), anhDeBase64 = anhDeBase64, hanNop = hanNop),
+                    BaiGiao(loai = "GIAY", tieuDe = tieuDe.trim(), noiDung = noiDung.trim(), anhDeBase64 = anhDeBase64, hanNop = hanNop, cauHoiIds = idsTL),
                 ).onSuccess { onXong() }
                     .onFailure { loi = "Không giao được bài, kiểm tra mạng rồi thử lại" }
             }
@@ -1083,6 +1117,10 @@ fun ChamVaThongKeScreen(
     val dapAnDung = bank.cauHoiTheoIds(baiGiao.cauHoiIds).associate { it.id to it.dapAnDung } + baiGiao.dapAnCauAnh
     val thongKe = tinhThongKe(baiGiao, hocSinh, baiNopMap, dapAnDung, System.currentTimeMillis())
     val capTrung = timBaiNghiTrung(baiNopMap)
+    val tuLuanGoiY = if (baiGiao.loaiEnum == vn.giaobtvn.tieuhoc.data.LoaiBaiGiao.GIAY && baiGiao.cauHoiIds.isNotEmpty()) {
+        val ctx = LocalContext.current
+        remember(baiGiao.id) { TuLuanBank.load(ctx).theoIds(baiGiao.cauHoiIds) }
+    } else emptyList()
 
     CanhDoc {
         TieuDeCanh(
@@ -1107,6 +1145,20 @@ fun ChamVaThongKeScreen(
                 }
             thongKe.soLanSaiTheoCau.entries.sortedByDescending { it.value }.take(5).forEach { (cauId, soLan) ->
                 Text("• ${cauTheoId[cauId]?.noiDung ?: cauId}: sai $soLan lần", fontSize = 15.sp)
+            }
+        }
+        if (tuLuanGoiY.isNotEmpty()) {
+            Spacer(Modifier.height(16.dp))
+            Text("Đáp án gợi ý (chỉ cô xem):", fontSize = 17.sp, fontWeight = FontWeight.Bold)
+            tuLuanGoiY.forEachIndexed { i, c ->
+                The3D(Modifier.fillMaxWidth()) {
+                    Column(Modifier.padding(12.dp)) {
+                        Text("Câu ${i + 1}. ${c.de}", fontSize = 15.sp, fontWeight = FontWeight.Bold)
+                        Spacer(Modifier.height(4.dp))
+                        Text(c.goiY, fontSize = 15.sp)
+                    }
+                }
+                Spacer(Modifier.height(8.dp))
             }
         }
         Spacer(Modifier.height(20.dp))
