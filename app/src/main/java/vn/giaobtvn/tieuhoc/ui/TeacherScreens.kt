@@ -825,7 +825,13 @@ fun TaoTracNghiemScreen(
 ) {
     val scope = rememberCoroutineScope()
     var tieuDe by remember { mutableStateOf("") }
-    var chuDe by remember { mutableStateOf(bank.cacChuDe().firstOrNull() ?: "") }
+    val cacMonBank = remember(bank) { bank.cauHoi.map { it.mon.ifBlank { it.chuDe } }.filter { it.isNotBlank() }.distinct() }
+    var monChon by remember { mutableStateOf(cacMonBank.firstOrNull() ?: "") }
+    val cacLopBank = bank.cauHoi.filter { it.mon.ifBlank { it.chuDe } == monChon }.map { it.lop }.filter { it > 0 }.distinct().sorted()
+    var lopChonTN by remember { mutableStateOf(0) }
+    // Chủ đề thực của ngân hàng = môn (+ lớp nếu có); suy ra từ lựa chọn Môn/Lớp.
+    val lopHieuLuc = if (lopChonTN != 0) lopChonTN else (cacLopBank.firstOrNull() ?: 0)
+    val chuDe = bank.cauHoi.firstOrNull { it.mon.ifBlank { it.chuDe } == monChon && (lopHieuLuc == 0 || it.lop == lopHieuLuc) }?.chuDe ?: ""
     var bai by remember { mutableStateOf("Tất cả") }
     var cheDoTuDong by remember { mutableStateOf(true) }
     var soDe by remember { mutableStateOf("3") }
@@ -873,29 +879,21 @@ fun TaoTracNghiemScreen(
         TieuDeCanh("Giao bài trắc nghiệm", "Cô chọn tay từng câu hoặc chọn tự động theo mức độ")
         OutlinedTextField(tieuDe, { tieuDe = it }, label = { Text("Tiêu đề bài") }, modifier = Modifier.fillMaxWidth())
         Spacer(Modifier.height(12.dp))
-        Text("Chủ đề:", fontWeight = FontWeight.Bold)
-        bank.cacChuDe().forEach { ten ->
-            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable {
-                chuDe = ten
+        NhomChon("Môn", cacMonBank, monChon) { ten ->
+            monChon = ten
+            lopChonTN = 0
+            bai = "Tất cả"
+            cauDaChon = emptySet()
+        }
+        if (cacLopBank.isNotEmpty()) {
+            NhomChon("Lớp", cacLopBank.map { "Lớp $it" }, "Lớp $lopHieuLuc") { ten ->
+                lopChonTN = ten.removePrefix("Lớp ").toIntOrNull() ?: 0
                 bai = "Tất cả"
                 cauDaChon = emptySet()
-            }) {
-                RadioButton(selected = chuDe == ten, onClick = {
-                    chuDe = ten
-                    bai = "Tất cả"
-                    cauDaChon = emptySet()
-                })
-                Text(ten, fontSize = 16.sp)
             }
         }
         Spacer(Modifier.height(8.dp))
-        Text("Bài:", fontWeight = FontWeight.Bold)
-        cacBai.forEach { ten ->
-            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { bai = ten }) {
-                RadioButton(selected = bai == ten, onClick = { bai = ten })
-                Text(ten, fontSize = 16.sp)
-            }
-        }
+        NhomChon("Bài", cacBai, bai) { ten -> bai = ten }
         Spacer(Modifier.height(12.dp))
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable { cheDoTuDong = true }) {
             RadioButton(selected = cheDoTuDong, onClick = { cheDoTuDong = true })

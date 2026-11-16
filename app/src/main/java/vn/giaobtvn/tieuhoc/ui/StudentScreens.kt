@@ -669,6 +669,7 @@ fun OnTuDoScreen(
     }
     val tatCaCau = remember(bank, cauNhap) { bank.cauHoi + cauNhap.map { it.toCauHoi() } }
     var chuDe by remember { mutableStateOf("Tất cả") }
+    var lopChon by remember { mutableStateOf(0) }
     var chuong by remember { mutableStateOf("Tất cả") }
     var bai by remember { mutableStateOf("Tất cả") }
     var soCau by remember { mutableStateOf(10) }
@@ -687,15 +688,20 @@ fun OnTuDoScreen(
 
     // Lọc ôn tập theo Môn/Chương (câu nhập mới) + Bài (câu assets cũ vẫn
     // giữ trường bài, câu nhập mới có bài rỗng nên chỉ khớp "Tất cả").
-    val cacMon = listOf("Tất cả") + tatCaCau.map { it.chuDe }.filter { it.isNotBlank() }.distinct()
+    val khopMonLop = { cau: CauHoi ->
+        (chuDe == "Tất cả" || cau.mon.ifBlank { cau.chuDe } == chuDe) && (lopChon == 0 || cau.lop == lopChon)
+    }
+    val cacMon = listOf("Tất cả") + tatCaCau.map { it.mon.ifBlank { it.chuDe } }.filter { it.isNotBlank() }.distinct()
+    val cacLop = if (chuDe == "Tất cả") emptyList() else tatCaCau
+        .filter { it.mon.ifBlank { it.chuDe } == chuDe }.map { it.lop }.filter { it > 0 }.distinct().sorted()
     val cacChuong = listOf("Tất cả") + tatCaCau
-        .filter { chuDe == "Tất cả" || it.chuDe == chuDe }
+        .filter(khopMonLop)
         .map { it.chuong }.filter { it.isNotBlank() }.distinct()
     val cacBai = listOf("Tất cả") + tatCaCau
-        .filter { (chuDe == "Tất cả" || it.chuDe == chuDe) && (chuong == "Tất cả" || it.chuong == chuong) }
+        .filter { khopMonLop(it) && (chuong == "Tất cả" || it.chuong == chuong) }
         .map { it.bai }.filter { it.isNotBlank() }.distinct()
     val cauLoc = tatCaCau.filter { cau ->
-        (chuDe == "Tất cả" || cau.chuDe == chuDe) &&
+        khopMonLop(cau) &&
             (chuong == "Tất cả" || cau.chuong == chuong) &&
             (bai == "Tất cả" || cau.bai == bai)
     }
@@ -708,8 +714,16 @@ fun OnTuDoScreen(
         Khung("Chọn nội dung ôn") {
             NhomChon("Môn", cacMon, chuDe) { ten ->
                 chuDe = ten
+                lopChon = 0
                 chuong = "Tất cả"
                 bai = "Tất cả"
+            }
+            if (cacLop.isNotEmpty()) {
+                NhomChon("Lớp", listOf("Tất cả") + cacLop.map { "Lớp $it" }, if (lopChon == 0) "Tất cả" else "Lớp $lopChon") { ten ->
+                    lopChon = ten.removePrefix("Lớp ").toIntOrNull() ?: 0
+                    chuong = "Tất cả"
+                    bai = "Tất cả"
+                }
             }
             NhomChon("Chương", cacChuong, chuong) { ten ->
                 chuong = ten
