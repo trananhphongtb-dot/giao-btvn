@@ -24,7 +24,7 @@ class QuestionBank(val cauHoi: List<CauHoi>) {
             val goc = fromJson(text)
             // Ngân hàng Toán và Tiếng Việt lớp 1–5 (mỗi chủ đề 20 câu trắc nghiệm) nằm file riêng;
             // thiếu hoặc lỗi file nào thì file đó bị bỏ qua, ngân hàng gốc vẫn dùng được.
-            val them = listOf("cau_hoi_toan_tieu_hoc.json", "cau_hoi_tieng_viet.json").flatMap { f ->
+            val them = listOf("cau_hoi_toan_tieu_hoc.json", "cau_hoi_tieng_viet.json", "cau_hoi_toan_thcs_thpt.json").flatMap { f ->
                 try {
                     fromJson(context.assets.open(f).bufferedReader().use { it.readText() }).cauHoi
                 } catch (e: Exception) {
