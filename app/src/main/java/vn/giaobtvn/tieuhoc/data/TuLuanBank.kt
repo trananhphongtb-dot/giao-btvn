@@ -23,7 +23,7 @@ data class CauTuLuan(
 class TuLuanBank(val cau: List<CauTuLuan>) {
 
     companion object {
-        private val FILES = listOf("tu_luan_toan.json", "tu_luan_tieng_viet.json", "tu_luan_toan_thcs_thpt.json")
+        private val FILES = listOf("tu_luan_toan.json", "tu_luan_tieng_viet.json", "tu_luan_toan_thcs_thpt.json", "tu_luan_tieng_anh.json")
 
         /** Đọc từng file riêng; file nào thiếu hoặc lỗi thì bỏ qua, các file còn lại vẫn dùng được. */
         fun load(context: Context): TuLuanBank = TuLuanBank(FILES.flatMap { f ->
