@@ -27,9 +27,14 @@ def chapter(text, mode="kn"):
     P = parse(text, mode)
     KB = [b for _, b, m in P if m == 'kn']; KA = [a for a, _, m in P if m == 'kn']
     HB = [b for _, b, m in P if m == 'hoi']; EB = [b for _, b, m in P if m == 'en']; EA = [a for a, _, m in P if m == 'en']
+    HP = [(a, b) for a, b, m in P if m == 'hoi']
+    from collections import Counter
+    dem = Counter(b for _, b in HP)
     mcs, tls = [], []
     for a, b, m in P:
         if m == "hoi":
+            if dem[b] == 1 and len(HP) >= 5:
+                mcs.append((lambda a, b: (lambda rng: M(f"Nội dung \"{b}\" là câu trả lời cho câu hỏi nào?", a, _sai(rng, a, [q for q, x in HP if x != b]), 2)))(a, b))
             mcs.append((lambda a, b: (lambda rng: M(a, b, _sai(rng, b, HB), 2)))(a, b))
             tls.append((lambda a, b: (lambda rng: T(a, b, 2)))(a, b))
         elif m == "en":

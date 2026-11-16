@@ -15,7 +15,7 @@ def main(mods):
             for stt, c in enumerate(chs, 1):
                 ten, text = c[0], c[1]; mode = c[2] if len(c) > 2 else "kn"
                 mcs, tls = chapter(text, mode)
-                nm, nt = min(20, len(mcs)), min(10, len(tls))
+                nm, nt = min(40, len(mcs)), min(15, len(tls))
                 while True:
                     try:
                         tn, tl = build(lop, stt, ten, mcs, tls, seed=lop * 1000 + stt + sum(map(ord, m.MON)) * 7, mon=mon, pre=pre, khoa_dap_an=True, n_mc=nm, n_tl=nt)
