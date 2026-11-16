@@ -1,6 +1,8 @@
 import json, sys, importlib, os
 sys.path.insert(0, os.path.dirname(__file__))
 from core import build
+from kbcore import chapter
+from tv_bosung import EXTRA
 
 def main(lops):
     tn_all, tl_all = [], []
@@ -9,7 +11,17 @@ def main(lops):
         for stt, cd in enumerate(m.CHU_DE, 1):
             ten, mcs, tls = cd[:3]
             opt = cd[3] if len(cd) > 3 else {}
-            tn, tl = build(lop, stt, ten, mcs, tls, seed=lop * 1000 + stt + 500, mon="Tiếng Việt", pre="V", khoa_dap_an=True, **opt)
+            if (lop, stt) in EXTRA:
+                m2, t2 = chapter(EXTRA[(lop, stt)]); mcs = list(mcs) + m2
+            opt = {**opt}; nm = opt.pop("n_mc", 30); nt = opt.pop("n_tl", 12)
+            while True:
+                try:
+                    tn, tl = build(lop, stt, ten, mcs, tls, seed=lop * 1000 + stt + 500, mon="Tiếng Việt", pre="V", khoa_dap_an=True, n_mc=nm, n_tl=nt, **opt); break
+                except RuntimeError as e:
+                    if "trắc nghiệm" in str(e) and nm > 10: nm -= 1
+                    elif "tự luận" in str(e) and nt > 6: nt -= 1
+                    else: raise
+            if nm < 30: print("CẢNH BÁO TV", lop, stt, ten, nm, nt)
             tn_all += tn; tl_all += tl
     return tn_all, tl_all
 

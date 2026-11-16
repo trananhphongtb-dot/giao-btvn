@@ -8,7 +8,7 @@ def main(lops):
     for lop in lops:
         m = importlib.import_module(f"lop{lop}")
         for stt, (ten, mcs, tls) in enumerate(m.CHU_DE, 1):
-            tn, tl = build(lop, stt, ten, mcs, tls, seed=lop * 1000 + stt)
+            tn, tl = build(lop, stt, ten, mcs, tls, seed=lop * 1000 + stt, n_mc=30, n_tl=12)
             tn_all += tn; tl_all += tl
     return tn_all, tl_all
 

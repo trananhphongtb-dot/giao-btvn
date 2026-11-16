@@ -6,7 +6,15 @@ def main(lops):
     for lop in lops:
         m = importlib.import_module(f"ta{lop}")
         for stt, (ten, mcs, tls) in enumerate(m.CHU_DE, 1):
-            tn, tl = build(lop, stt, ten, mcs, tls, seed=lop * 1000 + stt + 900, mon="Tiếng Anh", pre="A", khoa_dap_an=True)
+            nm, nt = 30, 12
+            while True:
+                try:
+                    tn, tl = build(lop, stt, ten, mcs, tls, seed=lop * 1000 + stt + 900, mon="Tiếng Anh", pre="A", khoa_dap_an=True, n_mc=nm, n_tl=nt); break
+                except RuntimeError as e:
+                    if "trắc nghiệm" in str(e) and nm > 10: nm -= 1
+                    elif "tự luận" in str(e) and nt > 6: nt -= 1
+                    else: raise
+            if nm < 30: print("CẢNH BÁO TA", lop, stt, ten, nm, nt)
             tn_all += tn; tl_all += tl
     return tn_all, tl_all
 if __name__ == "__main__":
