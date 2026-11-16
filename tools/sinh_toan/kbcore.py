@@ -28,8 +28,9 @@ def chapter(text, mode="kn"):
     KB = [b for _, b, m in P if m == 'kn']; KA = [a for a, _, m in P if m == 'kn']
     HB = [b for _, b, m in P if m == 'hoi']; EB = [b for _, b, m in P if m == 'en']; EA = [a for a, _, m in P if m == 'en']
     HP = [(a, b) for a, b, m in P if m == 'hoi']
+    AP = [(a, b) for a, b, m in P if m != 'en']
     from collections import Counter
-    dem = Counter(b for _, b in HP)
+    dem = Counter(b for _, b in AP)
     mcs, tls = [], []
     for a, b, m in P:
         if m == "hoi":
@@ -37,6 +38,8 @@ def chapter(text, mode="kn"):
                 mcs.append((lambda a, b: (lambda rng: M(f"Nội dung \"{b}\" là câu trả lời cho câu hỏi nào?", a, _sai(rng, a, [q for q, x in HP if x != b]), 2)))(a, b))
             mcs.append((lambda a, b: (lambda rng: M(a, b, _sai(rng, b, HB), 2)))(a, b))
             tls.append((lambda a, b: (lambda rng: T(a, b, 2)))(a, b))
+            if dem[b] == 1 and len(b) > 3:
+                tls.append((lambda a, b: (lambda rng: T(f"Nội dung sau là câu trả lời cho câu hỏi nào? \"{b}\"", a, 2)))(a, b))
         elif m == "en":
             mcs.append((lambda a, b: (lambda rng: M(f"Từ \"{a}\" có nghĩa là:", b, _sai(rng, b, EB), 1)))(a, b))
             mcs.append((lambda a, b: (lambda rng: M(f"\"{b}\" trong tiếng Anh là:", a, _sai(rng, a, EA), 1)))(a, b))
@@ -45,4 +48,18 @@ def chapter(text, mode="kn"):
             mcs.append((lambda a, b: (lambda rng: M(f"Phát biểu nào đúng khi nói về \"{a}\"?", b, _sai(rng, b, KB), 2)))(a, b))
             mcs.append((lambda a, b: (lambda rng: M(f"Phát biểu: \"{b}\" nói về khái niệm nào?", a, _sai(rng, a, KA), 2)))(a, b))
             tls.append((lambda a, b: (lambda rng: T(f"Trình bày: {a}", b, 2)))(a, b))
+    U = list(AP)
+    for a, b in U:
+        if len(U) < 6: break
+        def ph1(rng, a=a, b=b):
+            ok = [(q, x) for q, x in U if q != a and x != b]
+            if len(ok) < 3: raise ValueError
+            ps = rng.sample(ok, 3)
+            return M("Phát biểu nào sau đây ĐÚNG?", f"{a} → {b}", [f"{q} → {rng.choice([y for _, y in ok if y != x])}" for q, x in ps], 2)
+        def ph2(rng, a=a, b=b):
+            ok = [(q, x) for q, x in U if q != a and x != b]
+            if len(ok) < 3: raise ValueError
+            ps = rng.sample(ok, 3)
+            return M("Phát biểu nào sau đây SAI?", f"{a} → {rng.choice([x for _, x in ok])}", [f"{q} → {x}" for q, x in ps], 2)
+        mcs.append(ph1); mcs.append(ph2)
     return mcs, tls

@@ -2,6 +2,7 @@ import json, sys, importlib, os
 sys.path.insert(0, os.path.dirname(__file__))
 from core import build
 from kbcore import chapter
+from bosung import EXTRA
 # mã môn -> (tên môn, tiền tố id)
 MON = {"khtn": ("KHTN", "K"), "ta": ("Tiếng Anh", "A"), "ly": ("Vật lí", "L"), "hoa": ("Hóa học", "H"), "sinh": ("Sinh học", "S"),
        "su": ("Lịch sử", "U"), "dia": ("Địa lí", "D"), "gdcd": ("GDCD", "G"), "ktpl": ("Kinh tế & Pháp luật", "P"), "tin": ("Tin học", "I"),
@@ -14,6 +15,7 @@ def main(mods):
         for lop, chs in m.DATA.items():
             for stt, c in enumerate(chs, 1):
                 ten, text = c[0], c[1]; mode = c[2] if len(c) > 2 else "kn"
+                text = text + EXTRA.get((m.MON, lop, stt), '')
                 mcs, tls = chapter(text, mode)
                 nm, nt = min(40, len(mcs)), min(15, len(tls))
                 while True:
@@ -24,6 +26,7 @@ def main(mods):
                         if "trắc nghiệm" in str(e) and nm > 6: nm -= 1
                         elif "tự luận" in str(e) and nt > 6: nt -= 1
                         else: raise
+                if len(tn) < 30: print('CẢNH BÁO <30 TN:', mon, lop, ten, len(tn))
                 tn_all += tn; tl_all += tl
     return tn_all, tl_all
 if __name__ == "__main__":
