@@ -8,6 +8,7 @@ import androidx.credentials.GetCredentialRequest
 import androidx.credentials.exceptions.GetCredentialCancellationException
 import androidx.credentials.exceptions.NoCredentialException
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
+import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
@@ -72,12 +73,22 @@ data class GiaoVienDaDangNhap(val uid: String, val ten: String, val email: Strin
 object DangNhapGoogle {
     suspend fun dangNhap(activity: Activity): Result<GiaoVienDaDangNhap> {
         return try {
+            val webClientId = activity.getString(R.string.default_web_client_id)
+            val credentialManager = CredentialManager.create(activity)
             val option = GetGoogleIdOption.Builder()
                 .setFilterByAuthorizedAccounts(false)
-                .setServerClientId(activity.getString(R.string.default_web_client_id))
+                .setServerClientId(webClientId)
                 .build()
             val request = GetCredentialRequest.Builder().addCredentialOption(option).build()
-            val result = CredentialManager.create(activity).getCredential(activity, request)
+            val result = try {
+                credentialManager.getCredential(activity, request)
+            } catch (e: NoCredentialException) {
+                // Một số máy không hiện được bảng chọn tài khoản kiểu mới; thử lại bằng
+                // nút "Đăng nhập bằng Google" (màn chọn tài khoản đầy đủ).
+                val optionNut = GetSignInWithGoogleOption.Builder(webClientId).build()
+                val requestNut = GetCredentialRequest.Builder().addCredentialOption(optionNut).build()
+                credentialManager.getCredential(activity, requestNut)
+            }
             val cred = result.credential
             if (cred is CustomCredential && cred.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
                 val g = GoogleIdTokenCredential.createFrom(cred.data)
