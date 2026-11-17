@@ -109,11 +109,11 @@ object DangNhapGoogle {
         } catch (e: CancellationException) {
             throw e
         } catch (e: GetCredentialCancellationException) {
-            Result.failure(Exception("Bạn đã hủy đăng nhập"))
+            Result.failure(Exception("Đăng nhập bị hủy hoặc bị từ chối (${e.type}: ${e.message ?: "không rõ"})"))
         } catch (e: NoCredentialException) {
             Result.failure(Exception("Không lấy được tài khoản Google trên máy này. Kiểm tra tài khoản Google trong Cài đặt của điện thoại, hoặc cấu hình Firebase của app, rồi thử lại."))
         } catch (e: Exception) {
-            Result.failure(Exception("Đăng nhập không thành công, kiểm tra mạng rồi thử lại"))
+            Result.failure(Exception("Đăng nhập không thành công (${e.javaClass.simpleName}: ${e.message ?: "không rõ"})"))
         }
     }
 
